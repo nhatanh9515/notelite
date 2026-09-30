@@ -10,7 +10,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="NoteLite">
 <script>if (/^https?:$/.test(location.protocol)) document.write('<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png">');</script>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23191919'/%3E%3Cpath d='M19 47V17h6.2l13.6 19.4V17H45v30h-6.1L25.2 27.6V47z' fill='%23f4f3ef'/%3E%3C/svg%3E">
 <style>
 :root{
   --bg:#fff;--side:#f8f8f7;--text:#37352f;--t2:rgba(55,53,47,.65);--t3:rgba(55,53,47,.42);--ph:rgba(55,53,47,.22);
@@ -638,10 +638,9 @@ function renderNav() {
   updateTodayNav();
 }
 function setCrumb() {
-  if (S.active === '__today') { $('#crumb').innerHTML = '<span>☀️</span><span>Highlight today</span>'; document.title = 'Highlight today — NoteLite'; return; }
+  if (S.active === '__today') { $('#crumb').innerHTML = '<span>☀️</span><span>Highlight today</span>'; return; }
   const p = cur(), f = p && p.folder && S.folders[p.folder];
   $('#crumb').innerHTML = p ? (f ? `<span class="crumb-f">📁 ${esc(f.name)}</span><span class="crumb-sep">/</span>` : '') + `<span>${esc(p.icon || '📄')}</span><span>${esc(p.title || 'Không có tiêu đề')}</span>` : '';
-  document.title = p ? (p.title || 'Không có tiêu đề') + ' — NoteLite' : 'NoteLite';
 }
 function updateMeta() {
   const p = cur(), m = $('#pmeta');
@@ -2137,7 +2136,6 @@ function renderToday(el) {
   shownDay = dayKey();
   el.className = 'page';
   $('#crumb').innerHTML = '<span>☀️</span><span>Highlight today</span>';
-  document.title = 'Highlight today — NoteLite';
   const td = todayList(), xs = todayItems(td), done = xs.filter(x => x.t.col === 'done').length;
   const pct = xs.length ? Math.round(done / xs.length * 100) : 0;
   const head = h('div', 'page-head', `<div class="picon static">☀️</div><div class="ptitle static">Highlight today</div>
