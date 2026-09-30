@@ -158,7 +158,14 @@ svg{width:16px;height:16px;flex:none;display:block}
 .block[data-type=code] .grip{top:17px}
 .block[data-type=divider]{padding:6px 0}
 .block[data-type=image]{margin:6px 0;outline:none}
-.img-box{position:relative;width:100%;border-radius:6px;overflow:hidden;background:var(--hov);cursor:zoom-in;min-height:60px}
+.img-box{position:relative;width:100%;max-width:100%;border-radius:6px;background:var(--hov);cursor:zoom-in;min-height:60px}
+.img-rs{position:absolute;top:50%;right:5px;width:6px;height:48px;max-height:45%;transform:translateY(-50%);border-radius:4px;background:rgba(20,20,20,.62);box-shadow:0 0 0 1.5px rgba(255,255,255,.85);cursor:ew-resize;opacity:0;transition:opacity .15s;touch-action:none;z-index:2}
+.img-rs::before{content:"";position:absolute;inset:-14px -12px}
+.block[data-type=image]:hover .img-rs,.block[data-type=image]:focus .img-rs,.block.resizing .img-rs{opacity:1}
+.block.loading .img-rs,.block.missing .img-rs{display:none}
+.img-size{display:none;position:absolute;top:8px;right:8px;padding:2px 7px;border-radius:5px;background:rgba(20,20,20,.7);color:#fff;font-size:12px;pointer-events:none;z-index:2}
+.block.resizing .img-size{display:block}
+.block.resizing{user-select:none}
 .block.ready .img-box{background:none;min-height:0}
 .img-box img{display:block;width:100%;height:auto;border-radius:6px}
 .block.loading .img-box img,.block.missing .img-box img{display:none}
@@ -370,6 +377,7 @@ svg{width:16px;height:16px;flex:none;display:block}
   .nav-act{display:grid}.nav-item.folder .f-cnt{display:none}
   .nav-del{display:none}
   .trow-rm{opacity:1}
+  .img-rs{opacity:.85}
   .dlg-picker .pk-list{max-height:56vh}
   .dlg .pk-q,.pk-q{font-size:16px}
   .dlg.dlg-picker{padding:18px 16px 4px}
@@ -924,7 +932,7 @@ function setType(w, type, checked = false) {
   const nb = blockEl({ id: w.dataset.id, type, html: type === 'divider' || !c ? '' : c.innerHTML, checked });
   w.replaceWith(nb); return nb;
 }
-const ser = w => { const t = w.dataset.type, o = { id: w.dataset.id, type: t, html: bc(w) ? bc(w).innerHTML : '', checked: w.classList.contains('checked') }; if (t === 'image') o.img = w.dataset.img || ''; return o; };
+const ser = w => { const t = w.dataset.type, o = { id: w.dataset.id, type: t, html: bc(w) ? bc(w).innerHTML : '', checked: w.classList.contains('checked') }; if (t === 'image') { o.img = w.dataset.img || ''; if (+w.dataset.width) o.width = +w.dataset.width; } return o; };
 function syncNote() {
   const p = cur(); if (!p || p.type !== 'note' || !ED) return;
   p.blocks = $$(':scope > .block', ED).map(ser); touch(p);
@@ -1119,6 +1127,8 @@ function endDragB(ed) { if (DRAGB) DRAGB.classList.remove('dragging'); DRAGB = n
 function bindEditor(ed) {
   ed.addEventListener('keydown', onKey);
   ed.addEventListener('keydown', onImgKey);
+  ed.addEventListener('pointerdown', e => { const rs = e.target.closest && e.target.closest('.img-rs'); if (rs) startImgResize(e, rs); });
+  ed.addEventListener('dblclick', e => { const rs = e.target.closest && e.target.closest('.img-rs'); if (rs) { e.preventDefault(); setImgWidth(rs.closest('.block'), 0); } });
   ed.addEventListener('input', onInput);
   ed.addEventListener('paste', onPaste);
   ed.addEventListener('click', e => {
@@ -1127,7 +1137,8 @@ function bindEditor(ed) {
     const g = e.target.closest('.grip');
     if (g) { openBlockMenu(g.parentElement, g); return; }
     const ib = e.target.closest('.block[data-type=image]');
-    if (ib && e.target.closest('.img-box')) { if (ib.classList.contains('ready')) openLightbox(ib); else if (ib.classList.contains('missing')) showImg(ib); return; }
+    if (ib && e.target.closest('.img-rs')) return;
+    if (ib && e.target.closest('.img-box')) { if (Date.now() - imgResizedAt < 400) return; if (ib.classList.contains('ready')) openLightbox(ib); else if (ib.classList.contains('missing')) showImg(ib); return; }
     const a = e.target.closest('.bc a[href]');
     if (a) { if (e.ctrlKey || e.metaKey) { e.preventDefault(); openUrl(a.href); } else showLP(a, true); }
   });
@@ -1181,12 +1192,16 @@ function bindEditor(ed) {
 function openBlockMenu(w, g) {
   if (w.dataset.type === 'image') {
     openMenu(g.getBoundingClientRect(), [
+      { head: 'Kích thước' },
+      ...IMG_SIZES.map(([label, px]) => ({ label, ic: (+w.dataset.width || 0) === px ? IC.check : '', act: 'size', px })),
+      { head: 'Ảnh' },
       { label: 'Xem ảnh lớn', ic: IC.ext, act: 'view' },
       { label: 'Tải ảnh xuống', ic: IC.down, act: 'dl' },
       { label: 'Nhân bản', ic: IC.copy, act: 'dup' },
       { label: 'Xóa', ic: IC.trash, act: 'del', cls: 'danger' }
     ], it => {
-      if (it.act === 'view') openLightbox(w);
+      if (it.act === 'size') setImgWidth(w, it.px);
+      else if (it.act === 'view') openLightbox(w);
       else if (it.act === 'dl') downloadImageFile(w.dataset.img);
       else if (it.act === 'dup') { w.after(blockEl({ ...ser(w), id: uid() })); syncNote(); }
       else removeImageBlock(w);
@@ -2290,14 +2305,52 @@ function mergeImgs(a, b) {
 }
 
 /* ---- image block in the editor ---- */
+/* display size: "auto" = medium (≈480px wide, ≈400px tall at most, never larger than the picture itself).
+   A width the user sets is stored on the block in CSS px (FULL = always the full column). */
+const IMG_FULL = 10000, IMG_SIZES = [['Nhỏ', 240], ['Vừa', 0], ['Lớn', 640], ['Toàn chiều rộng', IMG_FULL]];
+function autoImgWidth(m) {
+  if (!m || !m.w || !m.h) return 420;
+  return Math.max(120, Math.min(480, Math.round(400 * m.w / m.h), m.w));
+}
+function applyImgWidth(w) {
+  const box = $('.img-box', w); if (!box) return;
+  const set = +w.dataset.width || 0;
+  box.style.width = (set || autoImgWidth(imgMeta(w.dataset.img))) + 'px';
+}
 function imageBlockBody(w, b) {
-  w.dataset.img = b.img || ''; w.tabIndex = 0;
+  w.dataset.img = b.img || ''; w.dataset.width = b.width || ''; w.tabIndex = 0;
   const m = imgMeta(b.img), box = h('div', 'img-box');
-  if (m && m.w && m.h) { box.style.aspectRatio = m.w + ' / ' + m.h; box.style.maxWidth = Math.min(m.w, 900) + 'px'; }
+  if (m && m.w && m.h) box.style.aspectRatio = m.w + ' / ' + m.h;
   const im = h('img'); im.alt = ''; im.draggable = false; im.decoding = 'async';
-  box.append(im, h('div', 'img-msg'));
+  const rs = h('div', 'img-rs'); rs.title = 'Kéo để đổi kích thước · bấm đúp để về cỡ vừa';
+  box.append(im, h('div', 'img-msg'), rs, h('div', 'img-size'));
   w.append(box);
+  applyImgWidth(w);
   showImg(w);
+}
+function setImgWidth(w, px) {
+  w.dataset.width = px ? String(px) : '';
+  applyImgWidth(w); syncNote();
+}
+let imgResizedAt = 0;
+function startImgResize(e, rs) {
+  const w = rs.closest('.block'), box = rs.parentElement, tag = $('.img-size', box);
+  e.preventDefault(); e.stopPropagation();
+  try { rs.setPointerCapture(e.pointerId); } catch (_) {}
+  const x0 = e.clientX, w0 = box.getBoundingClientRect().width, maxW = w.getBoundingClientRect().width;
+  let cur_ = w0;
+  w.classList.add('resizing');
+  const move = ev => {
+    cur_ = Math.round(Math.max(80, Math.min(maxW, w0 + ev.clientX - x0)));
+    box.style.width = cur_ + 'px';
+    tag.textContent = cur_ >= maxW - 4 ? 'Toàn chiều rộng' : Math.round(cur_ / maxW * 100) + '%';
+  };
+  const up = () => {
+    rs.removeEventListener('pointermove', move); rs.removeEventListener('pointerup', up); rs.removeEventListener('pointercancel', up);
+    w.classList.remove('resizing'); imgResizedAt = Date.now();
+    if (Math.abs(cur_ - w0) >= 2) setImgWidth(w, cur_ >= maxW - 4 ? IMG_FULL : cur_);
+  };
+  rs.addEventListener('pointermove', move); rs.addEventListener('pointerup', up); rs.addEventListener('pointercancel', up);
 }
 function showImg(w) {
   const id = w.dataset.img, im = $('img', w), msg = $('.img-msg', w);
