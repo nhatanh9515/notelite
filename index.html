@@ -1,0 +1,2386 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#191919" media="(prefers-color-scheme: dark)">
+<title>NoteLite</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NoteLite">
+<script>if (/^https?:$/.test(location.protocol)) document.write('<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png">');</script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+<style>
+:root{
+  --bg:#fff;--side:#f8f8f7;--text:#37352f;--t2:rgba(55,53,47,.65);--t3:rgba(55,53,47,.42);--ph:rgba(55,53,47,.22);
+  --hov:rgba(55,53,47,.06);--hov2:rgba(55,53,47,.1);--bd:rgba(55,53,47,.09);--acc:#2383e2;--red:#eb5757;--link:#1f7ad6;
+  --card:#fff;--cardh:#fbfbfa;--shadow:rgba(15,15,15,.07) 0 0 0 1px,rgba(15,15,15,.06) 0 2px 4px;
+  --pop:#fff;--popsh:rgba(15,15,15,.05) 0 0 0 1px,rgba(15,15,15,.1) 0 3px 6px,rgba(15,15,15,.2) 0 9px 24px;
+  --codebg:#f7f6f3;--icode:rgba(135,131,120,.15);--icodec:#eb5757;--mark:rgba(255,212,0,.38);
+  --c-backlog:#f7f7f5;--p-backlog:rgba(227,226,224,.75);--d-backlog:#91918e;--x-backlog:#32302c;
+  --c-todo:#f4f8fb;--p-todo:#d3e5ef;--d-todo:#5b97bd;--x-todo:#183347;
+  --c-done:#f5f9f6;--p-done:#dbeddb;--d-done:#6c9b7d;--x-done:#1c3829;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#191919;--side:#202020;--text:rgba(255,255,255,.86);--t2:rgba(255,255,255,.56);--t3:rgba(255,255,255,.36);--ph:rgba(255,255,255,.2);
+  --hov:rgba(255,255,255,.055);--hov2:rgba(255,255,255,.09);--bd:rgba(255,255,255,.09);
+  --card:#252525;--cardh:#2b2b2b;--shadow:rgba(255,255,255,.07) 0 0 0 1px,rgba(0,0,0,.3) 0 2px 4px;
+  --pop:#252525;--popsh:rgba(255,255,255,.08) 0 0 0 1px,rgba(0,0,0,.35) 0 3px 6px,rgba(0,0,0,.45) 0 9px 24px;
+  --codebg:#222;--icode:rgba(135,131,120,.25);--icodec:#ff7369;--mark:rgba(255,212,0,.24);
+  --c-backlog:#1e1e1e;--p-backlog:#373737;--d-backlog:#979a9b;--x-backlog:rgba(255,255,255,.86);
+  --c-todo:#1a1f25;--p-todo:#1f3a52;--d-todo:#5e9fd0;--x-todo:#d3e6f5;--link:#5aa6e0;
+  --c-done:#1a211c;--p-done:#243b2c;--d-done:#6aa37f;--x-done:#d0e8d7;
+  color-scheme:dark;
+}}
+:root[data-theme=dark]{
+  --bg:#191919;--side:#202020;--text:rgba(255,255,255,.86);--t2:rgba(255,255,255,.56);--t3:rgba(255,255,255,.36);--ph:rgba(255,255,255,.2);
+  --hov:rgba(255,255,255,.055);--hov2:rgba(255,255,255,.09);--bd:rgba(255,255,255,.09);
+  --card:#252525;--cardh:#2b2b2b;--shadow:rgba(255,255,255,.07) 0 0 0 1px,rgba(0,0,0,.3) 0 2px 4px;
+  --pop:#252525;--popsh:rgba(255,255,255,.08) 0 0 0 1px,rgba(0,0,0,.35) 0 3px 6px,rgba(0,0,0,.45) 0 9px 24px;
+  --codebg:#222;--icode:rgba(135,131,120,.25);--icodec:#ff7369;--mark:rgba(255,212,0,.24);
+  --c-backlog:#1e1e1e;--p-backlog:#373737;--d-backlog:#979a9b;--x-backlog:rgba(255,255,255,.86);
+  --c-todo:#1a1f25;--p-todo:#1f3a52;--d-todo:#5e9fd0;--x-todo:#d3e6f5;--link:#5aa6e0;
+  --c-done:#1a211c;--p-done:#243b2c;--d-done:#6aa37f;--x-done:#d0e8d7;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.5 ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+svg{width:16px;height:16px;flex:none;display:block}
+::selection{background:rgba(35,131,226,.28)}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--hov2);border-radius:10px;border:2px solid transparent;background-clip:padding-box}::-webkit-scrollbar-track{background:transparent}
+
+#app{display:flex;height:100%}
+/* Sidebar */
+#side{width:248px;flex:none;background:var(--side);display:flex;flex-direction:column;transition:margin-left .2s ease,transform .2s ease;box-shadow:inset -1px 0 0 var(--bd);user-select:none;z-index:30}
+#app.side-closed #side{margin-left:-248px}
+.ws{display:flex;align-items:center;gap:8px;padding:12px 10px 8px 14px;font-weight:600;font-size:14px}
+.ws-logo{width:22px;height:22px;border-radius:5px;background:var(--text);color:var(--bg);display:grid;place-items:center;font-size:12px;font-weight:700}
+.ws-name{flex:1}
+.ibtn{width:28px;height:28px;border-radius:6px;display:inline-grid;place-items:center;color:var(--t2);flex:none}
+.ibtn:hover{background:var(--hov2);color:var(--text)}
+.sitem{display:flex;align-items:center;gap:8px;height:30px;padding:0 10px;margin:1px 6px;border-radius:6px;color:var(--t2);font-size:14px;text-align:left;width:calc(100% - 12px)}
+.sitem:hover{background:var(--hov2);color:var(--text)}
+.si{width:20px;display:grid;place-items:center}
+.search input{flex:1;min-width:0;border:0;outline:0;background:none;font:inherit;color:var(--text)}
+.search input::placeholder{color:var(--t2)}
+.search:focus-within{background:var(--hov2)}
+.slabel{font-size:12px;font-weight:600;color:var(--t3);padding:14px 16px 4px}
+#nav{flex:1;overflow:auto;padding-bottom:8px}
+.nav-item{display:flex;align-items:center;gap:6px;height:30px;padding:0 4px 0 10px;margin:1px 6px;border-radius:6px;cursor:pointer;color:var(--t2);font-size:14px}
+.nav-item:hover{background:var(--hov)}
+.nav-item.active{background:var(--hov2);color:var(--text);font-weight:500}
+.nav-ic{width:20px;text-align:center;font-size:15px;line-height:1}
+.nav-tt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav-del{opacity:0;width:24px;height:24px;border-radius:4px;display:grid;place-items:center;color:var(--t3)}
+.nav-item:hover .nav-del{opacity:1}
+.nav-del:hover{background:var(--hov2);color:var(--red)}
+.nav-empty{padding:6px 16px;color:var(--t3);font-size:13px;position:relative}
+.nav-item{position:relative}
+.nav-item.drop-before::before,.nav-item.drop-after::after,.nav-empty.drop-after::after{content:"";position:absolute;left:10px;right:10px;height:2px;border-radius:2px;background:var(--acc);pointer-events:none;z-index:2}
+.nav-item.drop-before::before{top:-2px}.nav-item.drop-after::after,.nav-empty.drop-after::after{bottom:-2px}
+.nav-item.folder{color:var(--text);font-weight:500}
+.chev{width:16px;height:18px;margin-left:-6px;display:grid;place-items:center;color:var(--t3);transition:transform .15s ease;flex:none}
+.chev svg{width:12px;height:12px}
+.nav-item.folder.open .chev{transform:rotate(90deg)}
+.f-cnt{font-size:12px;font-weight:400;color:var(--t3);min-width:18px;text-align:right;padding-right:5px}
+.nav-act{display:none;width:24px;height:24px;border-radius:4px;place-items:center;color:var(--t3);flex:none}
+.nav-item:hover .nav-act{display:grid}
+.nav-item.folder:hover .f-cnt{display:none}
+.nav-act:hover{background:var(--hov2);color:var(--text)}
+.f-children{position:relative}
+.f-children::before{content:"";position:absolute;left:25px;top:2px;bottom:2px;width:1px;background:var(--bd)}
+.nav-item.sub{padding-left:34px}
+.nav-empty.sub{padding:4px 16px 6px 40px;font-size:12px}
+.nav-item.dragging,.f-children.dragging{opacity:.4}
+.nav-item.drop-in{background:rgba(35,131,226,.14);box-shadow:inset 0 0 0 1.5px rgba(35,131,226,.55)}
+#nav.drop-root{box-shadow:inset 0 0 0 1.5px rgba(35,131,226,.35);border-radius:8px}
+.rename{flex:1;min-width:0;font:inherit;font-weight:500;color:var(--text);background:var(--bg);border:0;outline:0;border-radius:4px;padding:2px 5px;box-shadow:0 0 0 2px rgba(35,131,226,.55)}
+.crumb-f{color:var(--t2);white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+.crumb-sep{color:var(--t3)}
+.sfoot{padding:6px 0 10px;box-shadow:inset 0 1px 0 var(--bd)}
+.scrim{display:none}
+
+/* Main */
+#main{flex:1;min-width:0;display:flex;flex-direction:column}
+#top{height:44px;flex:none;display:flex;align-items:center;gap:6px;padding:0 10px}
+#app:not(.side-closed) #openSide{display:none}
+#crumb{display:flex;align-items:center;gap:6px;min-width:0;padding:2px 6px;font-size:14px}
+#crumb span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp{flex:1}
+#status{font-size:12px;color:var(--t3);white-space:nowrap;margin-right:4px}
+#scroll{flex:1;overflow:auto}
+.page{max-width:900px;margin:0 auto;padding:0 96px}
+.page.wide{max-width:none;padding:0 40px}
+.page-head{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:10px;align-items:center;padding:18px 0 12px;margin-bottom:14px;box-shadow:inset 0 -1px 0 var(--bd)}
+.picon{grid-row:1/3;font-size:30px;line-height:1;width:46px;height:46px;border-radius:8px;display:grid;place-items:center;margin-left:-6px}
+.picon:hover{background:var(--hov)}
+.ptitle{font-size:28px;font-weight:700;line-height:1.25;outline:none;margin:0;word-break:break-word;white-space:pre-wrap}
+.ptitle:empty::before{content:attr(data-ph);color:var(--ph)}
+.pmeta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:12px;color:var(--t3);margin-top:2px}
+.prog{width:90px;height:5px;border-radius:3px;background:var(--hov2);overflow:hidden;display:inline-block}
+.prog i{display:block;height:100%;background:var(--d-done);transition:width .3s}
+.empty{padding:120px 20px;text-align:center;color:var(--t2)}
+.empty h2{color:var(--text);font-size:22px;margin:0 0 6px}
+.empty .row{display:flex;gap:8px;justify-content:center;margin-top:16px}
+.btn{height:32px;padding:0 12px;border-radius:6px;box-shadow:inset 0 0 0 1px var(--bd);display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--hov)}
+
+/* Editor */
+.editor{counter-reset:num;font-size:16px;line-height:1.5}
+.block{position:relative;display:flex;align-items:flex-start;margin:1px 0}
+.block:not([data-type=number]){counter-reset:num}
+.block[data-type=number]{counter-increment:num}
+.grip{position:absolute;left:-26px;top:3px;width:20px;height:24px;border-radius:4px;display:grid;place-items:center;color:var(--t3);opacity:0;cursor:grab;transition:opacity .1s}
+.grip svg{width:10px;height:16px}
+.block:hover>.grip{opacity:1}
+.grip:hover{background:var(--hov2)}
+.bc{flex:1;min-width:0;outline:none;padding:3px 2px;white-space:pre-wrap;word-break:break-word}
+.bc:empty::before{content:attr(data-ph);color:var(--ph);pointer-events:none}
+.block[data-type=p] .bc:empty:not(:focus)::before{content:""}
+.block[data-type=h1]{margin-top:1.3em}.block[data-type=h1] .bc{font-size:1.875em;font-weight:600;line-height:1.3}.block[data-type=h1] .grip{top:11px}
+.block[data-type=h2]{margin-top:1.1em}.block[data-type=h2] .bc{font-size:1.5em;font-weight:600;line-height:1.3}.block[data-type=h2] .grip{top:7px}
+.block[data-type=h3]{margin-top:.8em}.block[data-type=h3] .bc{font-size:1.25em;font-weight:600;line-height:1.3}.block[data-type=h3] .grip{top:4px}
+.editor>.block:first-child{margin-top:0}
+.pre{min-width:24px;height:30px;display:flex;align-items:center;justify-content:center;flex:none;padding:0 2px}
+.block[data-type=bullet] .pre::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.block[data-type=number] .pre::before{content:counter(num) "."}
+.chk{width:16px;height:16px;margin:7px 8px 0 4px;border:1.5px solid var(--t2);border-radius:3px;cursor:pointer;flex:none;display:grid;place-items:center;transition:background .12s}
+.chk svg{width:12px;height:12px;color:#fff;opacity:0}
+.chk.on{background:var(--acc);border-color:var(--acc)}.chk.on svg{opacity:1}
+.block.checked .bc{text-decoration:line-through;color:var(--t3)}
+.block[data-type=quote] .bc{border-left:3px solid currentColor;padding-left:14px;margin:4px 0;font-size:1.1em}
+.block[data-type=code] .bc{font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--codebg);padding:16px 20px;border-radius:6px;margin:4px 0;tab-size:2}
+.block[data-type=code] .grip{top:17px}
+.block[data-type=divider]{padding:6px 0}
+.block[data-type=divider] .grip{top:1px}
+.hr{flex:1;height:1px;background:var(--bd);margin:6px 0}
+.bc code{background:var(--icode);color:var(--icodec);border-radius:4px;padding:.15em .35em;font:85% ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.bc mark{background:var(--mark);color:inherit;border-radius:3px;padding:0 1px}
+.bc a[href],.ttext a[href]{color:var(--link);text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--link) 45%,transparent);text-underline-offset:3px;cursor:pointer;word-break:break-all}
+.bc a[href]:hover,.ttext a[href]:hover{text-decoration-color:var(--link)}
+.lp{display:flex;flex-direction:column;padding:4px;font-size:13px;max-width:calc(100vw - 16px)}
+.lp-view{display:flex;align-items:center;gap:2px}
+.lp-url{display:flex;align-items:center;gap:6px;height:30px;padding:0 8px;border-radius:6px;color:var(--t2);text-decoration:none;min-width:0;max-width:240px}
+.lp-url span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lp-url:hover{background:var(--hov2);color:var(--text)}
+.lp .sep{width:1px;height:18px;background:var(--bd);margin:0 3px;flex:none}
+.lp-btn{display:flex;align-items:center;gap:5px;height:30px;padding:0 8px;border-radius:6px;white-space:nowrap}
+.lp-btn svg{width:15px;height:15px}
+.lp-btn:hover{background:var(--hov2)}
+.lp-btn.danger:hover{color:var(--red)}
+.lp-edit{display:none;flex-direction:column;gap:10px;padding:10px;width:340px;max-width:calc(100vw - 24px)}
+.lp.editing .lp-view{display:none}.lp.editing .lp-edit{display:flex}
+.lp-edit label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--t2)}
+.lp-edit input{height:34px;border:0;border-radius:6px;padding:0 10px;font:inherit;font-size:14px;color:var(--text);background:var(--hov);box-shadow:inset 0 0 0 1px var(--bd);outline:0}
+.lp-edit input:focus{box-shadow:inset 0 0 0 2px rgba(35,131,226,.6)}
+.lp-row{display:flex;justify-content:flex-end;gap:6px}
+.btn.primary{background:var(--acc);color:#fff;box-shadow:none}.btn.primary:hover{background:#1a6fc4}
+.block.dragging{opacity:.35}
+.block.drop-before::after,.block.drop-after::after{content:"";position:absolute;left:0;right:0;height:3px;background:var(--acc);opacity:.55;border-radius:2px}
+.block.drop-before::after{top:-2px}.block.drop-after::after{bottom:-2px}
+.ed-tail{height:30vh;cursor:text}
+
+/* Board */
+.board{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding:4px 2px 16px}
+.col{flex:1 1 0;min-width:270px;max-width:420px;border-radius:10px;padding:8px;display:flex;flex-direction:column;max-height:var(--colmax,calc(100vh - 120px))}
+.col-head{flex:none}
+.col-backlog{background:var(--c-backlog)}.col-todo{background:var(--c-todo)}.col-done{background:var(--c-done)}
+.col-head{display:flex;align-items:center;gap:8px;padding:2px 2px 10px 4px;min-height:34px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px 0 8px;border-radius:12px;font-size:14px;font-weight:500}
+.pill i{width:8px;height:8px;border-radius:50%}
+.col-backlog .pill{background:var(--p-backlog);color:var(--x-backlog)}.col-backlog .pill i{background:var(--d-backlog)}
+.col-todo .pill{background:var(--p-todo);color:var(--x-todo)}.col-todo .pill i{background:var(--d-todo)}
+.col-done .pill{background:var(--p-done);color:var(--x-done)}.col-done .pill i{background:var(--d-done)}
+.cnt{color:var(--t3);font-size:14px}
+.col-head .ibtn{opacity:.0;width:26px;height:26px}
+.col:hover .col-head .ibtn{opacity:1}
+.cards{display:flex;flex-direction:column;gap:8px;min-height:6px;flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;margin:0 -6px;padding:2px 6px 4px;scrollbar-width:thin}
+.cards>*{flex:none}
+.cards.fade-b{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 28px),transparent)}
+.cards.fade-t{-webkit-mask-image:linear-gradient(to bottom,transparent,#000 28px);mask-image:linear-gradient(to bottom,transparent,#000 28px)}
+.cards.fade-t.fade-b{-webkit-mask-image:linear-gradient(to bottom,transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to bottom,transparent,#000 28px,#000 calc(100% - 28px),transparent)}
+.card{position:relative;background:var(--card);border-radius:8px;box-shadow:var(--shadow);padding:10px 8px 8px 10px;display:grid;grid-template-columns:auto 1fr auto;column-gap:9px;align-items:start;cursor:grab;transition:opacity .22s,transform .22s,background .15s}
+.card:hover{background:var(--cardh)}
+.card.dragging{opacity:.35}
+.card.leaving{opacity:0;transform:translateX(14px) scale(.98)}
+.card.flash{animation:flash 1.4s ease}
+@keyframes flash{0%,35%{box-shadow:0 0 0 2px var(--acc),var(--shadow)}100%{box-shadow:var(--shadow)}}
+.tchk{width:17px;height:17px;margin-top:2px;border:1.5px solid var(--t2);border-radius:4px;display:grid;place-items:center;transition:background .15s,border-color .15s}
+.tchk svg{width:12px;height:12px;color:#fff;opacity:0;transition:opacity .15s}
+.tchk:hover{border-color:var(--acc)}
+.tchk.on{background:var(--acc);border-color:var(--acc)}.tchk.on svg{opacity:1}
+.ttext{font-size:14px;line-height:1.5;font-weight:500;outline:none;cursor:text;word-break:break-word;white-space:pre-wrap;min-height:21px}
+.ttext:empty::before{content:attr(data-ph);color:var(--ph);font-weight:400}
+.card.is-done .ttext{text-decoration:line-through;color:var(--t3)}
+.tdel{width:22px;height:22px;border-radius:4px;display:grid;place-items:center;color:var(--t3);opacity:0}
+.tdel svg{width:14px;height:14px}
+.card:hover .tdel{opacity:1}
+.tdel:hover{background:var(--hov2);color:var(--red)}
+.tmeta{grid-column:2/4;display:flex;align-items:center;gap:5px;margin-top:5px;font-size:12px;color:var(--t3);cursor:pointer;width:fit-content;border-radius:4px;padding:1px 4px 1px 0}
+.tmeta svg{width:13px;height:13px}
+.tmeta:hover{color:var(--t2)}
+.thist{grid-column:2/4;display:none;margin-top:6px;padding-top:6px;box-shadow:inset 0 1px 0 var(--bd);font-size:12px;color:var(--t2)}
+.card.show-hist .thist{display:block}
+.thist div{display:flex;justify-content:space-between;gap:10px;padding:1px 0}
+.thist span{color:var(--t3);white-space:nowrap}
+.add-card{flex:none;display:flex;align-items:center;gap:6px;width:100%;height:32px;padding:0 8px;margin-top:6px;border-radius:6px;color:var(--t3);font-size:14px}
+.add-card:hover{background:var(--hov2);color:var(--t2)}
+.drop-line{height:2px;margin:-5px 2px;background:var(--acc);border-radius:2px;opacity:.7}
+
+/* Popovers */
+.pop{position:fixed;z-index:50;background:var(--pop);box-shadow:var(--popsh);border-radius:10px}
+.menu{padding:6px;min-width:220px;max-width:320px;max-height:360px;overflow:auto;font-size:14px}
+.mi{display:flex;align-items:center;gap:10px;padding:4px 8px;min-height:30px;border-radius:6px;cursor:pointer}
+.mi.on{background:var(--hov2)}
+.mi.danger{color:var(--red)}
+.mi-ic{width:20px;display:grid;place-items:center;flex:none;color:var(--t2);font-size:13px}
+.mi.danger .mi-ic{color:var(--red)}
+.mi-tx{display:flex;flex-direction:column;min-width:0}
+.mi-tx small{color:var(--t3);font-size:12px}
+.menu.big .mi-ic{width:40px;height:40px;border-radius:6px;box-shadow:inset 0 0 0 1px var(--bd);background:var(--bg);font-weight:600;font-size:15px;color:var(--text)}
+.mi-head{padding:8px 8px 4px;font-size:12px;font-weight:500;color:var(--t3)}
+.mi-empty{padding:8px;color:var(--t3)}
+.emo{display:grid;grid-template-columns:repeat(8,34px);gap:2px;padding:8px}
+.emo button{height:34px;border-radius:6px;font-size:20px}
+.emo button:hover{background:var(--hov2)}
+.fmt{display:flex;align-items:center;padding:3px;border-radius:8px}
+.fmt button{height:28px;min-width:30px;padding:0 7px;border-radius:5px;display:grid;place-items:center;font-size:14px}
+.fmt button:hover{background:var(--hov2)}
+.fmt .sep{width:1px;height:18px;background:var(--bd);margin:0 3px}
+.fmt .hl{background:var(--mark);padding:0 3px;border-radius:3px}
+
+/* sync pill */
+.sync{display:none;align-items:center;gap:6px;height:26px;padding:0 9px;border-radius:13px;font-size:12px;color:var(--t2);white-space:nowrap}
+.sync:hover{background:var(--hov2)}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--t3);flex:none}
+.sync.on{display:inline-flex}
+.sync.ok i{background:#4dab6f}.sync.busy i{background:var(--acc);animation:pulse 1s infinite}.sync.warn i{background:#e0983a}.sync.err i{background:var(--red)}.sync.err{color:var(--red)}
+@keyframes pulse{50%{opacity:.3}}
+/* overlay dialog */
+.ovl{position:fixed;inset:0;z-index:80;background:rgba(15,15,15,.45);display:grid;place-items:center;padding:20px}
+.dlg{background:var(--pop);color:var(--text);box-shadow:var(--popsh);border-radius:14px;width:100%;max-width:400px;padding:22px 22px 18px}
+.dlg h3{margin:0 0 6px;font-size:18px}
+.dlg p{margin:6px 0;color:var(--t2);font-size:14px}
+.dlg .ic{font-size:34px;line-height:1;margin-bottom:10px}
+.dlg .fld{display:flex;flex-direction:column;gap:5px;margin-top:14px;font-size:13px;color:var(--t2)}
+.dlg .fld span{display:flex;justify-content:space-between;align-items:baseline}
+.dlg .fld a{color:var(--acc);text-decoration:none;font-weight:500}
+.dlg input{width:100%;height:42px;border:0;border-radius:9px;padding:0 12px;font:15px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text);background:var(--hov);box-shadow:inset 0 0 0 1px var(--bd);outline:0}
+.dlg .hint{font-size:12.5px;margin-top:12px}
+.dlg .warn-msg{color:#c77d1a;font-size:13.5px}
+.dlg .btn:disabled{opacity:.55;pointer-events:none}
+.sync.off{color:var(--acc);box-shadow:inset 0 0 0 1px rgba(35,131,226,.35)}.sync.off i{display:none}
+.dlg input:focus{box-shadow:inset 0 0 0 2px rgba(35,131,226,.6)}
+.dlg .err{color:var(--red);min-height:20px;font-size:13px}
+.dlg .row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+.dlg .btn{height:38px;padding:0 14px}
+.dlg ol{margin:8px 0;padding-left:20px;color:var(--t2);font-size:14px}.dlg li{margin:5px 0}
+.share-ic{display:inline-block;vertical-align:-3px}
+/* toast */
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:90;background:#2f2f2f;color:#fff;font-size:14px;padding:9px 14px;border-radius:9px;box-shadow:0 6px 20px rgba(0,0,0,.25);transition:opacity .2s,transform .2s;display:flex;gap:12px;align-items:center;max-width:calc(100vw - 32px)}
+#toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#toast button{color:#7cc0ff;font-weight:600}
+/* mobile board tabs + card menu */
+.mtabs{display:none}
+.tmore{display:none;width:26px;height:26px;border-radius:5px;place-items:center;color:var(--t3)}
+.tmore:active{background:var(--hov2)}
+/* Highlight today */
+.today-item{margin:1px 6px 4px;color:var(--text);font-weight:500}
+.today-item .f-cnt{font-weight:500}
+.today-item.all-done .f-cnt{color:#4dab6f}
+.picon.static,.picon.static:hover{background:none;cursor:default}
+.today-intro{max-width:760px;margin:4px 0 10px}
+.today-intro h3{font-size:18px;margin:0 0 4px}
+.today-intro p{margin:0;color:var(--t2);font-size:14px}
+.today-list{display:flex;flex-direction:column;gap:6px;max-width:760px}
+.trow{display:grid;grid-template-columns:auto 1fr auto;column-gap:10px;align-items:start;padding:10px 6px 10px 10px;border-radius:9px;background:var(--card);box-shadow:var(--shadow);transition:opacity .2s}
+.trow .tchk{margin-top:2px}
+.trow-body{min-width:0}
+.trow-text{font-size:15px;font-weight:500;line-height:1.45;word-break:break-word}
+.trow-text a[href]{color:var(--link);text-decoration:underline;text-underline-offset:3px;word-break:break-all}
+.trow.is-done .trow-text{text-decoration:line-through;color:var(--t3)}
+.trow-src{display:inline-flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:4px;font-size:12px;color:var(--t3);border-radius:4px;text-align:left}
+.trow-src:hover .nm{text-decoration:underline;color:var(--t2)}
+.trow-src .dot{opacity:.6}
+.cl{font-size:11px;line-height:18px;padding:0 7px;border-radius:9px;white-space:nowrap}
+.cl-backlog{background:var(--p-backlog);color:var(--x-backlog)}.cl-todo{background:var(--p-todo);color:var(--x-todo)}.cl-done{background:var(--p-done);color:var(--x-done)}
+.trow-rm{width:26px;height:26px;border-radius:5px;display:grid;place-items:center;color:var(--t3);opacity:0}
+.trow:hover .trow-rm{opacity:1}
+.trow-rm:hover{background:var(--hov2);color:var(--text)}
+.trow-rm svg{width:14px;height:14px}
+.today-done{margin:14px 2px 0;color:var(--t2);font-size:14px}
+.today-add{max-width:760px;margin-top:10px}
+.picker{max-width:760px;display:flex;flex-direction:column;gap:10px}
+.pk-q{height:38px;border:0;border-radius:8px;padding:0 12px;font:inherit;font-size:15px;color:var(--text);background:var(--hov);box-shadow:inset 0 0 0 1px var(--bd);outline:0}
+.pk-q:focus{box-shadow:inset 0 0 0 2px rgba(35,131,226,.55)}
+.pk-carry{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;background:rgba(35,131,226,.09);color:var(--acc);font-size:14px;text-align:left}
+.pk-list{display:flex;flex-direction:column}
+.pk-g{display:flex;gap:6px;align-items:center;font-size:13px;font-weight:600;color:var(--t2);padding:12px 6px 4px}
+.pk-g .n{font-weight:400;color:var(--t3)}
+.pk-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;text-align:left;padding:8px;border-radius:7px;font-size:14.5px;line-height:1.45}
+.pk-row:hover{background:var(--hov)}
+.pk-row.on{background:rgba(35,131,226,.09)}
+.pk-row .tchk{margin-top:1px}
+.pk-tx{word-break:break-word}
+.pk-empty{padding:16px 6px;color:var(--t3);font-size:14px}
+.pk-foot{position:sticky;bottom:0;display:flex;align-items:center;gap:8px;justify-content:flex-end;padding:10px 0 12px;background:var(--bg);box-shadow:0 -1px 0 var(--bd)}
+.pk-cnt{margin-right:auto;color:var(--t2);font-size:13.5px}
+.btn:disabled{opacity:.5;pointer-events:none}
+.btn.primary{background:var(--acc);color:#fff;box-shadow:none}
+.dlg.dlg-picker{max-width:560px;padding-bottom:6px}
+.dlg-picker .picker{margin-top:10px}
+.dlg-picker .pk-list{max-height:52vh;overflow:auto;overscroll-behavior:contain}
+.dlg-picker .pk-foot{background:var(--pop)}
+.dlg .pk-q{height:38px;font:inherit;font-size:15px;border-radius:8px}
+.pk-foot .btn{white-space:nowrap;flex:none}
+.pk-cnt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:900px){.page{padding:0 48px}.page.wide{padding:0 32px}}
+@media (max-width:760px){
+  #side{position:fixed;top:0;bottom:0;left:0;box-shadow:rgba(15,15,15,.2) 0 0 24px}
+  #app.side-closed #side{margin-left:0;transform:translateX(-105%)}
+  #app:not(.side-closed) .scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:25}
+  .page,.page.wide{padding:0 20px}
+  .page-head{padding-top:10px}
+  .ptitle{font-size:24px}
+  .grip{display:none}
+  .col{min-width:260px}
+  .tdel,.col-head .ibtn{opacity:1}
+  .nav-act{display:grid}.nav-item.folder .f-cnt{display:none}
+  .nav-del{display:none}
+  .trow-rm{opacity:1}
+  .dlg-picker .pk-list{max-height:56vh}
+  .dlg .pk-q,.pk-q{font-size:16px}
+  .dlg.dlg-picker{padding:18px 16px 4px}
+  #top{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
+  #scroll{padding-bottom:env(safe-area-inset-bottom)}
+  .sfoot{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+  #side{padding-top:env(safe-area-inset-top)}
+  #q,.rename,.lp-edit input{font-size:16px}
+  .ttext,.editor{font-size:16px}
+  .sitem,.nav-item{height:36px}
+  #status{display:none}
+  .crumb-f,.crumb-sep{display:none}
+  .mtabs{display:flex;gap:4px;padding:3px;margin:2px 0 10px;border-radius:10px;background:var(--hov)}
+  .mtabs button{flex:1;height:34px;border-radius:8px;font-size:14px;font-weight:500;color:var(--t2);display:flex;align-items:center;justify-content:center;gap:6px}
+  .mtabs button.on{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .mtabs .n{font-size:12px;color:var(--t3);font-weight:400}
+  .board{display:block;overflow:visible;padding-bottom:8px}
+  .board .col{display:none;max-width:none;min-width:0}
+  .board[data-m=backlog] .col-backlog,.board[data-m=todo] .col-todo,.board[data-m=done] .col-done{display:flex}
+  .col-head{display:none}
+  .card{grid-template-columns:auto 1fr auto;padding:12px 8px 10px 12px}
+  .tchk{width:20px;height:20px;margin-top:1px}
+  .tdel{display:none}
+  .tmore{display:grid}
+  .lp-btn span{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="side">
+    <div class="ws"><div class="ws-logo">N</div><div class="ws-name">NoteLite</div><button class="ibtn" id="closeSide" title="Thu gọn thanh bên (Ctrl+\)"></button></div>
+    <label class="sitem search"><span class="si" data-ic="search"></span><input id="q" placeholder="Tìm kiếm" autocomplete="off"></label>
+    <button class="sitem" id="newNote"><span class="si" data-ic="doc"></span>Ghi chú mới</button>
+    <button class="sitem" id="newBoard"><span class="si" data-ic="board"></span>Todo list mới</button>
+    <button class="sitem" id="newFolder"><span class="si" data-ic="folder"></span>Thư mục mới</button>
+    <div class="slabel">Trang</div>
+    <div class="nav-item today-item" id="todayNav" title="Chọn việc làm hôm nay từ tất cả todo list"><span class="nav-ic">☀️</span><span class="nav-tt">Highlight today</span><span class="f-cnt"></span></div>
+    <nav id="nav"></nav>
+    <div class="sfoot">
+      <button class="sitem" id="exportBtn" title="Tải toàn bộ dữ liệu về máy để sao lưu"><span class="si" data-ic="down"></span>Xuất dữ liệu (.json)</button>
+      <button class="sitem" id="importBtn" title="Nhập lại từ file sao lưu .json"><span class="si" data-ic="up"></span>Nhập dữ liệu</button>
+      <button class="sitem" id="themeBtn"><span class="si" data-ic="theme"></span><span>Giao diện: <span id="themeLbl"></span></span></button>
+    </div>
+    <input type="file" id="importFile" accept=".json,application/json" hidden>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <main id="main">
+    <header id="top">
+      <button class="ibtn" id="openSide" title="Mở thanh bên (Ctrl+\)"></button>
+      <div id="crumb"></div>
+      <div class="sp"></div>
+      <span id="status"></span>
+      <button class="sync" id="syncBtn"><i></i><span id="syncLbl"></span></button>
+      <button class="ibtn" id="moreBtn" title="Tùy chọn trang"></button>
+    </header>
+    <div id="scroll"><div id="page" class="page"></div></div>
+  </main>
+</div>
+<div id="menu" class="pop menu" hidden></div>
+<div id="toast"></div>
+<div id="fmt" class="pop fmt" hidden>
+  <button data-cmd="bold" title="In đậm (Ctrl/⌘+B)"><b>B</b></button>
+  <button data-cmd="italic" title="In nghiêng (Ctrl/⌘+I)"><i style="font-family:Georgia,serif">i</i></button>
+  <button data-cmd="underline" title="Gạch chân (Ctrl/⌘+U)"><u>U</u></button>
+  <button data-cmd="strikeThrough" title="Gạch ngang"><s>S</s></button>
+  <span class="sep"></span>
+  <button data-cmd="code" title="Code">&lt;/&gt;</button>
+  <button data-cmd="mark" title="Highlight"><span class="hl">A</span></button>
+  <button data-cmd="link" title="Chèn link (Ctrl/⌘+click để mở)" data-ic="link"></button>
+</div>
+
+<script>
+(() => {
+'use strict';
+/* ---------- Helpers ---------- */
+const KEY = 'notelite.v1';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const h = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const now = () => Date.now();
+const pad = n => String(n).padStart(2, '0');
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
+function fmt(ts, short) {
+  const d = new Date(ts), t = `${pad(d.getHours())}:${pad(d.getMinutes())}`, day = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
+  return short && d.getFullYear() === new Date().getFullYear() ? `${t} · ${day}` : `${t} · ${day}/${d.getFullYear()}`;
+}
+const sv = d => `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const IC = {
+  plus: sv('<path d="M8 3.5v9M3.5 8h9"/>'),
+  trash: sv('<path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/>'),
+  check: sv('<path d="M3.6 8.3l2.9 2.9 5.9-6.4" stroke-width="2"/>'),
+  dots: '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="3.5" cy="8" r="1.3"/><circle cx="8" cy="8" r="1.3"/><circle cx="12.5" cy="8" r="1.3"/></svg>',
+  grip: '<svg viewBox="0 0 10 16" fill="currentColor"><circle cx="3" cy="3.5" r="1.2"/><circle cx="7" cy="3.5" r="1.2"/><circle cx="3" cy="8" r="1.2"/><circle cx="7" cy="8" r="1.2"/><circle cx="3" cy="12.5" r="1.2"/><circle cx="7" cy="12.5" r="1.2"/></svg>',
+  search: sv('<circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/>'),
+  chev: sv('<path d="M8.5 4L4.5 8l4 4M12.5 4l-4 4 4 4"/>'),
+  menu: sv('<path d="M2.5 4h11M2.5 8h11M2.5 12h11"/>'),
+  theme: sv('<circle cx="8" cy="8" r="5.5"/><path d="M8 2.5a5.5 5.5 0 010 11z" fill="currentColor"/>'),
+  down: sv('<path d="M8 2.5v8M4.5 7L8 10.5 11.5 7M3 13.5h10"/>'),
+  up: sv('<path d="M8 10.5v-8M4.5 6L8 2.5 11.5 6M3 13.5h10"/>'),
+  clock: sv('<circle cx="8" cy="8" r="5.5"/><path d="M8 5v3.2l2 1.3"/>'),
+  copy: sv('<rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5v-2a1 1 0 00-1-1h-6a1 1 0 00-1 1v6a1 1 0 001 1h2"/>'),
+  doc: sv('<path d="M4 2.5h5l3 3v8H4z"/><path d="M9 2.5v3h3M6 8.5h4M6 11h4"/>'),
+  board: sv('<rect x="2.5" y="3" width="3" height="10" rx="1"/><rect x="6.5" y="3" width="3" height="7" rx="1"/><rect x="10.5" y="3" width="3" height="5" rx="1"/>'),
+  md: sv('<path d="M2.5 4.5h11v7h-11z"/><path d="M4.5 9.5v-3L6 8l1.5-1.5v3M10.5 6.5v3M9.3 8.3l1.2 1.2 1.2-1.2"/>'),
+  folder: sv('<path d="M2.5 4.5a1 1 0 011-1h3l1.5 1.5h4.5a1 1 0 011 1v6a1 1 0 01-1 1h-9a1 1 0 01-1-1z"/><path d="M8 7.3v3.4M6.3 9h3.4"/>'),
+  x: sv('<path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/>'),
+  mvUp: sv('<path d="M8 13V3.5M4 7.5l4-4 4 4"/>'),
+  mvDown: sv('<path d="M8 3v9.5M4 8.5l4 4 4-4"/>'),
+  chevR: sv('<path d="M6 3.5L10.5 8 6 12.5" stroke-width="1.8"/>'),
+  edit: sv('<path d="M3 13l.6-2.7 7-7 2.1 2.1-7 7z"/><path d="M9.3 4.6l2.1 2.1"/>'),
+  sync: sv('<path d="M13 6.5A5 5 0 004.2 4.4L3 5.6M3 2.8v2.8h2.8M3 9.5a5 5 0 008.8 2.1l1.2-1.2M13 13.2v-2.8h-2.8"/>'),
+  share: sv('<path d="M8 10V2.5M5.2 5.2L8 2.5l2.8 2.7M5 7.5H4a1 1 0 00-1 1v4.5a1 1 0 001 1h8a1 1 0 001-1V8.5a1 1 0 00-1-1h-1"/>'),
+  arrow: sv('<path d="M3 8h10M9 4l4 4-4 4"/>'),
+  ext: sv('<path d="M9 2.5h4.5V7M13.5 2.5L7.5 8.5M11.5 9.5v4h-9v-9h4"/>'),
+  unlink: sv('<path d="M9 4.5l.9-.9a2.5 2.5 0 013.5 3.5l-.9.9M7 11.5l-.9.9a2.5 2.5 0 01-3.5-3.5l.9-.9M2.5 2.5l11 11"/>'),
+  globe: sv('<circle cx="8" cy="8" r="5.5"/><path d="M2.5 8h11M8 2.5c1.6 1.7 2.3 3.5 2.3 5.5S9.6 11.8 8 13.5C6.4 11.8 5.7 10 5.7 8S6.4 4.2 8 2.5z"/>'),
+  link: sv('<path d="M7 9a3 3 0 004.2.1l1.9-1.9a3 3 0 00-4.2-4.2l-.9.9"/><path d="M9 7a3 3 0 00-4.2-.1L2.9 8.8a3 3 0 004.2 4.2l.9-.9"/>')
+};
+$$('[data-ic]').forEach(e => e.innerHTML = IC[e.dataset.ic]);
+$('#closeSide').innerHTML = IC.chev; $('#openSide').innerHTML = IC.menu; $('#moreBtn').innerHTML = IC.dots;
+
+const ALLOW = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'CODE', 'MARK', 'A', 'BR']);
+function sanitize(html) {
+  const body = new DOMParser().parseFromString('<body>' + (html || ''), 'text/html').body;
+  const walk = el => [...el.childNodes].forEach(n => {
+    if (n.nodeType === 1) {
+      walk(n);
+      if (!ALLOW.has(n.tagName)) { n.replaceWith(...n.childNodes); return; }
+      const href = n.tagName === 'A' ? n.getAttribute('href') : null;
+      [...n.attributes].forEach(a => n.removeAttribute(a.name));
+      if (href && /^(https?:|mailto:)/i.test(href)) n.setAttribute('href', href);
+    } else if (n.nodeType !== 3) n.remove();
+  });
+  walk(body);
+  return body.innerHTML;
+}
+const URL_RE = /(?:https?:\/\/|www\.)[^\s<>"]+/gi;
+const TRAIL = /[.,;:!?)"'\]}>]+$/;
+const normUrl = u => { u = String(u || '').trim(); return /^[a-z][a-z0-9+.-]*:/i.test(u) ? u : 'https://' + u; };
+function linkifyEl(root) {
+  const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), nodes = []; let n, count = 0;
+  while ((n = tw.nextNode())) { URL_RE.lastIndex = 0; if (URL_RE.test(n.data) && !(n.parentElement && n.parentElement.closest('a,code'))) nodes.push(n); }
+  nodes.forEach(node => {
+    const t = node.data, frag = document.createDocumentFragment(); let last = 0, m;
+    URL_RE.lastIndex = 0;
+    while ((m = URL_RE.exec(t))) {
+      const url = m[0].replace(TRAIL, ''); if (url.length < 8) continue;
+      if (m.index > last) frag.append(t.slice(last, m.index));
+      const a = document.createElement('a'); a.setAttribute('href', normUrl(url)); a.textContent = url; frag.append(a); count++;
+      last = m.index + url.length; URL_RE.lastIndex = last;
+    }
+    if (!count) return;
+    if (last < t.length) frag.append(t.slice(last));
+    node.replaceWith(frag);
+  });
+  return count;
+}
+function inlineHtml(t) {
+  const s = esc(t)
+    .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>')
+    .replace(/~~([^~\n]+)~~/g, '<s>$1</s>')
+    .replace(/(^|[\s(])\*([^*\s][^*\n]*?)\*(?=[\s).,!?:;]|$)/g, '$1<i>$2</i>')
+    .replace(/\[([^\]\n]+)\]\(((?:https?:\/\/|mailto:)[^\s)]+)\)/g, '<a href="$2">$1</a>');
+  const d = document.createElement('div'); d.innerHTML = s; linkifyEl(d); return d.innerHTML;
+}
+const toText = html => new DOMParser().parseFromString('<body>' + (html || ''), 'text/html').body.textContent;
+
+/* ---------- State ---------- */
+const COLS = [{ id: 'backlog', name: 'Backlog' }, { id: 'todo', name: 'To-do' }, { id: 'done', name: 'Done' }];
+const colName = id => (COLS.find(c => c.id === id) || {}).name || id;
+let S = null;
+
+function seed() {
+  const t = now(), H = 3600e3;
+  const b = (type, html, checked) => ({ id: uid(), type, html, checked: !!checked });
+  const note = {
+    id: uid(), type: 'note', icon: '👋', title: 'Chào mừng đến NoteLite', createdAt: t, updatedAt: t, seed: true,
+    blocks: [
+      b('p', 'Ứng dụng ghi chú siêu nhẹ, chạy hoàn toàn trên máy bạn. Mọi thay đổi được <b>tự động lưu</b> vào trình duyệt.'),
+      b('h2', 'Gõ nhanh như Notion'),
+      b('bullet', 'Gõ <code>/</code> để mở menu chọn loại khối'),
+      b('bullet', 'Gõ <code># </code> <code>## </code> <code>### </code> để tạo tiêu đề'),
+      b('bullet', 'Gõ <code>- </code> tạo danh sách, <code>1. </code> đánh số, <code>[] </code> tạo ô tick'),
+      b('bullet', 'Gõ <code>&gt; </code> trích dẫn, <code>```</code> khối code, <code>---</code> đường kẻ'),
+      b('bullet', 'Bôi đen chữ để <b>in đậm</b>, <i>nghiêng</i>, <mark>highlight</mark>, chèn link'),
+      b('bullet', 'Rê chuột vào đầu dòng, kéo biểu tượng ⋮⋮ để sắp xếp · bấm vào để xóa/đổi loại'),
+      b('todo', 'Thử tick vào ô này'),
+      b('todo', 'Việc đã xong trông như thế này', true),
+      b('h2', 'Sao lưu dữ liệu'),
+      b('p', 'Bấm <b>Bật đồng bộ</b> ở góc trên bên phải để dùng chung ghi chú giữa máy tính và điện thoại (miễn phí qua GitHub, dữ liệu được mã hóa).'),
+      b('quote', 'Có thể bấm “Xuất dữ liệu” ở thanh bên để lưu thêm một bản .json trên máy.')
+    ]
+  };
+  const task = (text, col, hist) => ({ id: uid(), text, col, createdAt: hist[0].at, movedAt: hist[hist.length - 1].at, history: hist });
+  const board = {
+    id: uid(), type: 'board', icon: '✅', title: 'Việc cần làm', createdAt: t, updatedAt: t, seed: true,
+    tasks: [
+      task('Kéo thả task giữa các cột thử xem', 'backlog', [{ from: null, to: 'backlog', at: t - 5 * H }]),
+      task('Ý tưởng nội dung cho tuần sau', 'backlog', [{ from: null, to: 'backlog', at: t - 4 * H }]),
+      task('Tick ô vuông để chuyển task sang cột bên cạnh', 'todo', [{ from: null, to: 'backlog', at: t - 26 * H }, { from: 'backlog', to: 'todo', at: t - 3 * H }]),
+      task('Mở NoteLite lần đầu', 'done', [{ from: null, to: 'backlog', at: t - 2 * H }, { from: 'backlog', to: 'todo', at: t - 1.5 * H }, { from: 'todo', to: 'done', at: t - 60e3 }])
+    ]
+  };
+  const fid = uid();
+  board.folder = fid;
+  return { v: 1, pages: { [note.id]: note, [board.id]: board }, order: [note.id, board.id], folders: { [fid]: { id: fid, name: 'Công việc', open: true, createdAt: t, updatedAt: t, seed: true } }, folderOrder: [fid], orderAt: 0, folderOrderAt: 0, tomb: {}, active: note.id, theme: 'auto', side: true };
+}
+function fix(d) {
+  d.pages = d.pages || {};
+  d.folders = d.folders && typeof d.folders === 'object' ? d.folders : {};
+  d.tomb = d.tomb && typeof d.tomb === 'object' ? d.tomb : {};
+  d.orderAt = +d.orderAt || 0; d.folderOrderAt = +d.folderOrderAt || 0;
+  Object.values(d.folders).forEach(f => { f.updatedAt = +f.updatedAt || +f.createdAt || 0; });
+  d.folderOrder = (d.folderOrder || []).filter(id => d.folders[id]);
+  Object.keys(d.folders).forEach(id => { if (!d.folderOrder.includes(id)) d.folderOrder.push(id); });
+  Object.values(d.pages).forEach(p => { if (p.folder && !d.folders[p.folder]) p.folder = null; });
+  d.order = (d.order || []).filter(id => d.pages[id]);
+  Object.keys(d.pages).forEach(id => { if (!d.order.includes(id)) d.order.push(id); });
+  if (d.active !== '__today' && !d.pages[d.active]) d.active = d.order[0] || null;
+  d.theme = d.theme || 'auto';
+  return d;
+}
+function load() {
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+  S = fix(d && typeof d === 'object' && d.pages ? d : seed());
+}
+let saveTimer = null, dirty = false;
+function setStatus(t) { $('#status').textContent = t; }
+function save() { dirty = true; setStatus('Đang lưu…'); clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 250); if (typeof queueSync === 'function') queueSync(); }
+function saveNow() {
+  clearTimeout(saveTimer);
+  if (!dirty) return;
+  try { localStorage.setItem(KEY, JSON.stringify(S)); dirty = false; setStatus('Đã lưu'); }
+  catch (err) { setStatus('⚠ Lỗi lưu'); alert('Không lưu được dữ liệu (bộ nhớ trình duyệt có thể đã đầy hoặc bị chặn). Hãy bấm "Xuất dữ liệu" để sao lưu.'); }
+}
+const cur = () => S.pages[S.active];
+function touch(p) { p.updatedAt = now(); delete p.seed; save(); updateMeta(); updateTodayNav(); }
+
+/* ---------- Render: shell ---------- */
+function pageText(p) {
+  return p.title + ' ' + (p.type === 'note' ? (p.blocks || []).map(b => toText(b.html)).join(' ') : (p.tasks || []).map(t => t.text).join(' '));
+}
+function pageRow(id, sub) {
+  const p = S.pages[id];
+  const it = h('div', 'nav-item' + (sub ? ' sub' : '') + (id === S.active ? ' active' : ''));
+  it.dataset.id = id; it.draggable = true;
+  it.title = 'Kéo thả để đổi vị trí hoặc chuyển sang thư mục khác';
+  it.innerHTML = `<span class="nav-ic">${esc(p.icon || '📄')}</span><span class="nav-tt">${esc(p.title || 'Không có tiêu đề')}</span><button class="nav-del" title="Xóa trang">${IC.trash}</button>`;
+  return it;
+}
+function folderRow(f, count, open) {
+  const it = h('div', 'nav-item folder' + (open ? ' open' : ''));
+  it.dataset.fid = f.id; it.draggable = true; it.title = 'Kéo thả để đổi vị trí thư mục';
+  it.innerHTML = `<span class="chev">${IC.chevR}</span><span class="nav-ic">${open ? '📂' : '📁'}</span><span class="nav-tt">${esc(f.name || 'Thư mục')}</span><span class="f-cnt">${count}</span><button class="nav-act" data-act="add" title="Thêm trang vào thư mục">${IC.plus}</button><button class="nav-act" data-act="more" title="Tùy chọn thư mục">${IC.dots}</button>`;
+  return it;
+}
+function renderNav() {
+  const nav = $('#nav'), q = norm($('#q').value.trim());
+  nav.innerHTML = '';
+  const match = id => !q || norm(pageText(S.pages[id])).includes(q);
+  const pagesOf = fid => S.order.filter(id => (S.pages[id].folder || null) === fid);
+  let shown = 0;
+  S.folderOrder.forEach(fid => {
+    const f = S.folders[fid], all = pagesOf(fid), nameHit = q && norm(f.name).includes(q);
+    const list = q && !nameHit ? all.filter(match) : all;
+    if (q && !nameHit && !list.length) return;
+    const open = q ? true : !!f.open;
+    nav.append(folderRow(f, all.length, open)); shown++;
+    if (open) {
+      const box = h('div', 'f-children'); box.dataset.fid = fid;
+      if (!list.length) box.append(h('div', 'nav-empty sub', 'Trống · kéo trang vào đây'));
+      list.forEach(id => box.append(pageRow(id, true)));
+      nav.append(box);
+    }
+  });
+  pagesOf(null).filter(match).forEach(id => { nav.append(pageRow(id, false)); shown++; });
+  if (!shown) nav.append(h('div', 'nav-empty', q ? 'Không tìm thấy trang' : 'Chưa có trang nào'));
+  updateTodayNav();
+}
+function setCrumb() {
+  if (S.active === '__today') { $('#crumb').innerHTML = '<span>☀️</span><span>Highlight today</span>'; document.title = 'Highlight today — NoteLite'; return; }
+  const p = cur(), f = p && p.folder && S.folders[p.folder];
+  $('#crumb').innerHTML = p ? (f ? `<span class="crumb-f">📁 ${esc(f.name)}</span><span class="crumb-sep">/</span>` : '') + `<span>${esc(p.icon || '📄')}</span><span>${esc(p.title || 'Không có tiêu đề')}</span>` : '';
+  document.title = p ? (p.title || 'Không có tiêu đề') + ' — NoteLite' : 'NoteLite';
+}
+function updateMeta() {
+  const p = cur(), m = $('#pmeta');
+  if (!p || !m) return;
+  let html = `<span>Tạo ${fmt(p.createdAt)}</span><span>·</span><span>Sửa ${fmt(p.updatedAt)}</span>`;
+  if (p.type === 'board') {
+    const total = p.tasks.filter(t => t.text.trim()).length, done = p.tasks.filter(t => t.col === 'done' && t.text.trim()).length;
+    const pct = total ? Math.round(done / total * 100) : 0;
+    html += `<span>·</span><span class="prog"><i style="width:${pct}%"></i></span><span>${done}/${total} xong</span>`;
+  }
+  m.innerHTML = html;
+}
+function render() { applyTheme(); renderNav(); renderPage(); }
+
+let ED = null, BOARD = null;
+function renderPage() {
+  closeMenu(); $('#fmt').hidden = true; if (typeof hideLP === 'function' && LPA) hideLP();
+  const el = $('#page'), p = cur();
+  ED = null; BOARD = null; MTABS = null;
+  el.innerHTML = '';
+  $('#moreBtn').style.visibility = p ? '' : 'hidden';
+  if (S.active === TODAY) { renderToday(el); $('#scroll').scrollTop = 0; return; }
+  setCrumb();
+  if (!p) {
+    el.className = 'page';
+    el.innerHTML = `<div class="empty"><h2>Chưa có trang nào</h2><div>Tạo ghi chú hoặc todo list đầu tiên của bạn.</div><div class="row"><button class="btn" data-new="note">${IC.doc}Ghi chú mới</button><button class="btn" data-new="board">${IC.board}Todo list mới</button></div></div>`;
+    $$('[data-new]', el).forEach(b => b.onclick = () => createPage(b.dataset.new));
+    return;
+  }
+  el.className = 'page' + (p.type === 'board' ? ' wide' : '');
+  const head = h('div', 'page-head');
+  const ic = h('button', 'picon', esc(p.icon || '📄')); ic.title = 'Đổi biểu tượng';
+  ic.onclick = () => openEmoji(ic, em => { p.icon = em; ic.textContent = em; touch(p); renderNav(); setCrumb(); });
+  const tt = h('div', 'ptitle'); tt.contentEditable = 'true'; tt.spellcheck = false; tt.dataset.ph = 'Không có tiêu đề'; tt.textContent = p.title || '';
+  tt.addEventListener('input', () => {
+    if (tt.innerHTML === '<br>') tt.innerHTML = '';
+    p.title = tt.textContent.replace(/\n/g, ' ').trim(); touch(p); renderNav(); setCrumb();
+  });
+  tt.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || e.isComposing) return;
+    e.preventDefault();
+    if (p.type === 'note' && ED) { const f = $('.bc', ED); if (f) focusStart(f); } else tt.blur();
+  });
+  tt.addEventListener('paste', e => { e.preventDefault(); document.execCommand('insertText', false, (e.clipboardData.getData('text/plain') || '').replace(/\s*\n\s*/g, ' ')); });
+  const meta = h('div', 'pmeta'); meta.id = 'pmeta';
+  head.append(ic, tt, meta);
+  el.append(head);
+  if (p.type === 'note') renderNote(p, el); else renderBoard(p, el);
+  updateMeta();
+  $('#scroll').scrollTop = 0;
+}
+
+/* ---------- Pages ---------- */
+function createPage(type, folder) {
+  const t = now(), id = uid();
+  const p = type === 'note'
+    ? { id, type, icon: '📄', title: '', createdAt: t, updatedAt: t, blocks: [{ id: uid(), type: 'p', html: '', checked: false }] }
+    : { id, type, icon: '✅', title: '', createdAt: t, updatedAt: t, tasks: [] };
+  p.folder = folder && S.folders[folder] ? folder : null;
+  if (p.folder) S.folders[p.folder].open = true;
+  $('#q').value = '';
+  S.pages[id] = p; S.order.unshift(id); S.orderAt = t; S.active = id; save(); render();
+  if (innerWidth <= 760) setSide(false);
+  const tt = $('.ptitle'); tt && tt.focus();
+}
+function openPage(id) {
+  const pg = S.pages[id]; if (!pg) return;
+  if (pg.folder && S.folders[pg.folder]) S.folders[pg.folder].open = true;
+  S.active = id; save(); renderNav(); renderPage();
+  if (innerWidth <= 760) setSide(false);
+}
+/* ---------- Folders ---------- */
+function createFolder() {
+  const id = uid();
+  const t = now();
+  S.folders[id] = { id, name: 'Thư mục mới', open: true, createdAt: t, updatedAt: t };
+  S.folderOrder.push(id); S.folderOrderAt = t;
+  $('#q').value = '';
+  save();
+  if (!sideOpen) setSide(true);
+  startRename(id);
+}
+function startRename(fid) {
+  const f = S.folders[fid]; if (!f) return;
+  renderNav();
+  const row = $(`.nav-item.folder[data-fid="${fid}"]`); if (!row) return;
+  const inp = h('input', 'rename'); inp.value = f.name; inp.maxLength = 80; row.draggable = false;
+  $('.nav-tt', row).replaceWith(inp);
+  row.scrollIntoView({ block: 'nearest' });
+  inp.focus(); inp.select();
+  let done = false;
+  const commit = ok => {
+    if (done) return; done = true;
+    const v = inp.value.trim();
+    if (ok && v && v !== f.name) { f.name = v; f.updatedAt = now(); save(); }
+    renderNav(); setCrumb();
+  };
+  inp.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.isComposing || e.keyCode === 229) return;
+    if (e.key === 'Enter') { e.preventDefault(); commit(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); commit(false); }
+  });
+  inp.addEventListener('blur', () => commit(true));
+}
+function deleteFolder(fid) {
+  const f = S.folders[fid]; if (!f) return;
+  const n = S.order.filter(id => S.pages[id].folder === fid).length;
+  if (!confirm(`Xóa thư mục "${f.name}"?` + (n ? `\n${n} trang bên trong sẽ được chuyển ra ngoài, không bị xóa.` : ''))) return;
+  const t = now();
+  Object.values(S.pages).forEach(p => { if (p.folder === fid) { p.folder = null; p.updatedAt = t; } });
+  delete S.folders[fid]; S.folderOrder = S.folderOrder.filter(x => x !== fid);
+  S.tomb[fid] = t; S.folderOrderAt = t;
+  save(); renderNav(); setCrumb();
+}
+function movePageTo(id, fid) {
+  const p = S.pages[id]; if (!p) return;
+  fid = fid && S.folders[fid] ? fid : null;
+  if ((p.folder || null) === fid) return;
+  p.folder = fid; p.updatedAt = now();
+  if (fid) S.folders[fid].open = true;
+  save(); renderNav(); setCrumb();
+}
+/* page order: S.order is one global list; each folder (and the root) shows its pages in that order */
+function placePage(id, fid, refId, before) {
+  const p = S.pages[id]; if (!p || id === refId) return;
+  fid = fid && S.folders[fid] ? fid : null;
+  const t = now();
+  if ((p.folder || null) !== fid) { p.folder = fid; p.updatedAt = t; }
+  if (fid) S.folders[fid].open = true;
+  S.order = S.order.filter(x => x !== id);
+  let i;
+  if (refId && S.order.includes(refId)) i = S.order.indexOf(refId) + (before ? 0 : 1);
+  else { const sib = S.order.filter(x => (S.pages[x].folder || null) === fid); i = sib.length ? S.order.indexOf(sib[sib.length - 1]) + 1 : S.order.length; }
+  S.order.splice(i, 0, id); S.orderAt = t;
+  save(); renderNav(); setCrumb();
+}
+function stepPage(id, dir) {
+  const p = S.pages[id]; if (!p) return;
+  const sib = S.order.filter(x => (S.pages[x].folder || null) === (p.folder || null)), j = sib.indexOf(id) + dir;
+  if (j < 0 || j >= sib.length) return;
+  placePage(id, p.folder, sib[j], dir < 0);
+}
+function placeFolder(fid, refFid, before) {
+  if (fid === refFid || !S.folders[fid]) return;
+  S.folderOrder = S.folderOrder.filter(x => x !== fid);
+  const i = refFid && S.folderOrder.includes(refFid) ? S.folderOrder.indexOf(refFid) + (before ? 0 : 1) : S.folderOrder.length;
+  S.folderOrder.splice(i, 0, fid); S.folderOrderAt = now();
+  save(); renderNav();
+}
+function stepFolder(fid, dir) {
+  const i = S.folderOrder.indexOf(fid), j = i + dir;
+  if (i < 0 || j < 0 || j >= S.folderOrder.length) return;
+  placeFolder(fid, S.folderOrder[j], dir < 0);
+}
+function openMoveMenu(p, rect) {
+  const items = [
+    { head: 'Chuyển trang vào thư mục' },
+    ...S.folderOrder.map(fid => ({ label: S.folders[fid].name, ic: p.folder === fid ? IC.check : '📁', fid })),
+    { label: 'Không thuộc thư mục', ic: !p.folder ? IC.check : '', fid: null },
+    { label: 'Thư mục mới…', ic: IC.plus, fid: '__new' }
+  ];
+  openMenu(rect, items, it => {
+    if (it.fid !== '__new') { movePageTo(p.id, it.fid); return; }
+    const name = (prompt('Tên thư mục mới', 'Thư mục mới') || '').trim(); if (!name) return;
+    const id = uid(), t = now(); S.folders[id] = { id, name, open: true, createdAt: t, updatedAt: t }; S.folderOrder.push(id); S.folderOrderAt = t;
+    movePageTo(p.id, id);
+  }, 'move');
+}
+function deletePage(id) {
+  const p = S.pages[id]; if (!p) return;
+  if (!confirm(`Xóa trang "${p.title || 'Không có tiêu đề'}"?\nThao tác này không thể hoàn tác.`)) return;
+  delete S.pages[id]; S.order = S.order.filter(x => x !== id); S.tomb[id] = S.orderAt = now();
+  if (S.active === id) S.active = S.order[0] || null;
+  save(); render();
+}
+function duplicatePage(id) {
+  const src = S.pages[id]; if (!src) return;
+  const p = JSON.parse(JSON.stringify(src)), t = now();
+  p.id = uid(); p.title = (src.title || 'Không có tiêu đề') + ' (bản sao)'; p.createdAt = p.updatedAt = t; delete p.seed; delete p.ttomb;
+  (p.blocks || []).forEach(b => b.id = uid()); (p.tasks || []).forEach(x => { x.id = uid(); x.updatedAt = t; });
+  S.pages[p.id] = p; S.order.splice(S.order.indexOf(id) + 1, 0, p.id); S.orderAt = t; S.active = p.id; save(); render();
+}
+
+/* ---------- Caret utilities ---------- */
+function setSel(r) { const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+function focusStart(el) { el.focus(); const r = document.createRange(); r.selectNodeContents(el); r.collapse(true); setSel(r); }
+function focusEnd(el) { el.focus(); const r = document.createRange(); r.selectNodeContents(el); r.collapse(false); setSel(r); }
+function caretOffset(el) {
+  const s = getSelection(); if (!s.rangeCount) return 0;
+  const r = s.getRangeAt(0); if (!el.contains(r.startContainer)) return 0;
+  const pre = document.createRange(); pre.selectNodeContents(el); pre.setEnd(r.startContainer, r.startOffset);
+  return pre.toString().length;
+}
+function atStart(el) { const s = getSelection(); return s.rangeCount > 0 && s.isCollapsed && caretOffset(el) === 0; }
+function atEnd(el) {
+  const s = getSelection(); if (!s.rangeCount || !s.isCollapsed) return false;
+  const r = s.getRangeAt(0), post = document.createRange(); post.selectNodeContents(el); post.setStart(r.endContainer, r.endOffset);
+  return post.toString().length === 0;
+}
+function rangeAt(el, a, b) {
+  const r = document.createRange(); let pos = 0, started = false, n;
+  const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  while ((n = tw.nextNode())) {
+    const len = n.data.length;
+    if (!started && a <= pos + len) { r.setStart(n, a - pos); started = true; }
+    if (started && b <= pos + len) { r.setEnd(n, b - pos); return r; }
+    pos += len;
+  }
+  if (!started) r.setStart(el, el.childNodes.length);
+  r.setEnd(el, el.childNodes.length);
+  return r;
+}
+function caretRect(el) {
+  const s = getSelection();
+  if (s.rangeCount) { const r = s.getRangeAt(0).cloneRange(); r.collapse(true); const rs = r.getClientRects(); if (rs.length) return rs[0]; }
+  return el.getBoundingClientRect();
+}
+function onEdge(el, dir) {
+  const s = getSelection(); if (!s.rangeCount || !s.isCollapsed) return false;
+  if (dir === 'up' ? atStart(el) : atEnd(el)) return true;
+  const r = s.getRangeAt(0).cloneRange(); const rect = r.getClientRects()[0];
+  if (!rect) return false;
+  const er = el.getBoundingClientRect(), lh = parseFloat(getComputedStyle(el).lineHeight) || 24;
+  return dir === 'up' ? rect.top - er.top < lh * 0.75 : er.bottom - rect.bottom < lh * 0.75;
+}
+const tidy = el => { if (!el.textContent) el.innerHTML = ''; };
+function lineBreak() { if (!document.execCommand('insertLineBreak')) document.execCommand('insertHTML', false, '<br>'); }
+
+/* ---------- Note editor ---------- */
+const PH = { p: "Gõ '/' để chọn lệnh…", h1: 'Tiêu đề 1', h2: 'Tiêu đề 2', h3: 'Tiêu đề 3', bullet: 'Danh sách', number: 'Danh sách', todo: 'Việc cần làm', quote: 'Trích dẫn', code: 'Code (Ctrl/⌘+Enter để thoát khối)' };
+const MENU = [
+  { t: 'p', label: 'Văn bản', ic: 'Aa', desc: 'Đoạn văn thường', k: 'text van ban doan paragraph' },
+  { t: 'h1', label: 'Tiêu đề 1', ic: 'H1', desc: 'Tiêu đề lớn', k: 'h1 heading tieu de' },
+  { t: 'h2', label: 'Tiêu đề 2', ic: 'H2', desc: 'Tiêu đề vừa', k: 'h2 heading tieu de' },
+  { t: 'h3', label: 'Tiêu đề 3', ic: 'H3', desc: 'Tiêu đề nhỏ', k: 'h3 heading tieu de' },
+  { t: 'bullet', label: 'Danh sách chấm', ic: '•', desc: 'Danh sách đơn giản', k: 'bullet list danh sach cham ul' },
+  { t: 'number', label: 'Danh sách số', ic: '1.', desc: 'Danh sách đánh số', k: 'number list danh sach so ol' },
+  { t: 'todo', label: 'Việc cần làm', ic: '☑', desc: 'Ô tick theo dõi việc', k: 'todo checkbox viec can lam task check' },
+  { t: 'quote', label: 'Trích dẫn', ic: '❝', desc: 'Làm nổi bật một câu', k: 'quote trich dan blockquote' },
+  { t: 'code', label: 'Code', ic: '</>', desc: 'Khối code', k: 'code ma' },
+  { t: 'divider', label: 'Đường kẻ', ic: '—', desc: 'Ngăn cách các phần', k: 'divider duong ke hr line ngan cach' }
+];
+const bc = w => w.querySelector('.bc');
+function blockEl(b) {
+  const w = h('div', 'block'); w.dataset.id = b.id || uid(); w.dataset.type = b.type || 'p';
+  const g = h('div', 'grip', IC.grip); g.draggable = true; g.title = 'Kéo để di chuyển · Bấm để mở menu';
+  w.append(g);
+  if (b.type === 'divider') { w.append(h('div', 'hr')); return w; }
+  if (b.type === 'bullet' || b.type === 'number') w.append(h('div', 'pre'));
+  if (b.type === 'todo') { w.append(h('div', 'chk' + (b.checked ? ' on' : ''), IC.check)); if (b.checked) w.classList.add('checked'); }
+  const c = h('div', 'bc'); c.contentEditable = 'true'; c.spellcheck = false; c.dataset.ph = PH[w.dataset.type] || PH.p;
+  c.innerHTML = sanitize(b.html);
+  if (w.dataset.type !== 'code') linkifyEl(c);
+  w.append(c);
+  return w;
+}
+const newBlock = type => blockEl({ id: uid(), type, html: '', checked: false });
+function setType(w, type, checked = false) {
+  const c = bc(w);
+  const nb = blockEl({ id: w.dataset.id, type, html: type === 'divider' || !c ? '' : c.innerHTML, checked });
+  w.replaceWith(nb); return nb;
+}
+const ser = w => ({ id: w.dataset.id, type: w.dataset.type, html: w.dataset.type === 'divider' ? '' : bc(w).innerHTML, checked: w.classList.contains('checked') });
+function syncNote() {
+  const p = cur(); if (!p || p.type !== 'note' || !ED) return;
+  p.blocks = $$(':scope > .block', ED).map(ser); touch(p);
+}
+function sibEd(w, dir) {
+  let s = dir < 0 ? w.previousElementSibling : w.nextElementSibling;
+  while (s && !bc(s)) s = dir < 0 ? s.previousElementSibling : s.nextElementSibling;
+  return s ? bc(s) : null;
+}
+function mergeInto(pc, c) {
+  tidy(pc);
+  const mark = pc.childNodes.length;
+  while (c.firstChild) pc.appendChild(c.firstChild);
+  pc.focus();
+  const r = document.createRange(); r.setStart(pc, mark); r.collapse(true); setSel(r);
+}
+function renderNote(p, host) {
+  ED = h('div', 'editor');
+  const blocks = p.blocks && p.blocks.length ? p.blocks : [{ id: uid(), type: 'p', html: '' }];
+  blocks.forEach(b => ED.append(blockEl(b)));
+  const tail = h('div', 'ed-tail');
+  tail.addEventListener('mousedown', e => {
+    e.preventDefault();
+    const last = ED.lastElementChild, lc = last && bc(last);
+    if (last && last.dataset.type === 'p' && lc && !lc.textContent) focusStart(lc);
+    else { const nb = newBlock('p'); ED.append(nb); focusStart(bc(nb)); syncNote(); }
+  });
+  host.append(ED, tail);
+  bindEditor(ED);
+}
+const LISTY = ['bullet', 'number', 'todo', 'quote'];
+function onKey(e) {
+  const c = e.target.closest && e.target.closest('.bc'); if (!c) return;
+  if (e.isComposing || e.keyCode === 229) return;
+  const w = c.parentElement, type = w.dataset.type, mod = e.ctrlKey || e.metaKey;
+  if (!LP.hidden && !LP.classList.contains('editing')) hideLP();
+  if (mod && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); linkFromSelection(); return; }
+  if (mod && e.key === 'Enter') {
+    e.preventDefault();
+    if (type === 'todo') { w.classList.toggle('checked'); $('.chk', w).classList.toggle('on'); syncNote(); return; }
+    const nb = newBlock('p'); w.after(nb); focusStart(bc(nb)); syncNote(); return;
+  }
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (type !== 'code') linkifyAtCaret(c, true);
+    if (e.shiftKey || type === 'code') { lineBreak(); return; }
+    if (!c.textContent && LISTY.includes(type)) { focusStart(bc(setType(w, 'p'))); syncNote(); return; }
+    const sel = getSelection(); if (!sel.rangeCount) return;
+    const r = sel.getRangeAt(0); if (!r.collapsed) r.deleteContents();
+    const nt = ['bullet', 'number', 'todo'].includes(type) ? type : 'p';
+    if (c.textContent && caretOffset(c) === 0) { w.before(newBlock(nt)); syncNote(); return; }
+    const tail = document.createRange(); tail.selectNodeContents(c); tail.setStart(r.startContainer, r.startOffset);
+    const frag = tail.extractContents();
+    const nb = newBlock(nt); w.after(nb); const nc = bc(nb); nc.append(frag);
+    tidy(c); tidy(nc); focusStart(nc); syncNote(); return;
+  }
+  if (e.key === 'Backspace' && atStart(c)) {
+    if (type !== 'p') { e.preventDefault(); focusStart(bc(setType(w, 'p'))); syncNote(); return; }
+    const prev = w.previousElementSibling; if (!prev) return;
+    e.preventDefault();
+    if (prev.dataset.type === 'divider') { prev.remove(); syncNote(); return; }
+    mergeInto(bc(prev), c); w.remove(); syncNote(); return;
+  }
+  if (e.key === 'Delete' && atEnd(c)) {
+    const next = w.nextElementSibling; if (!next) return;
+    e.preventDefault();
+    if (next.dataset.type === 'divider') { next.remove(); syncNote(); return; }
+    mergeInto(c, bc(next)); next.remove(); syncNote(); return;
+  }
+  if (e.key === 'ArrowUp' && !e.shiftKey && !mod) {
+    const pv = sibEd(w, -1); if (pv && onEdge(c, 'up')) { e.preventDefault(); focusEnd(pv); } return;
+  }
+  if (e.key === 'ArrowDown' && !e.shiftKey && !mod) {
+    const nx = sibEd(w, 1);
+    if (nx && onEdge(c, 'down')) { e.preventDefault(); focusStart(nx); }
+    else if (!nx && type === 'code' && atEnd(c)) { e.preventDefault(); const nb = newBlock('p'); w.after(nb); focusStart(bc(nb)); syncNote(); }
+    return;
+  }
+  if (e.key === 'Tab' && type === 'code') { e.preventDefault(); document.execCommand('insertText', false, '  '); }
+}
+function shortcut(w, c) {
+  const type = w.dataset.type; if (type === 'code') return false;
+  const off = caretOffset(c), pre = c.textContent.slice(0, off).replace(/\u00a0/g, ' ');
+  if (pre === '---' && c.textContent === '---') {
+    c.innerHTML = ''; const d = setType(w, 'divider'); const nb = newBlock('p'); d.after(nb); focusStart(bc(nb)); return true;
+  }
+  if (pre === '```') { rangeAt(c, 0, 3).deleteContents(); focusStart(bc(setType(w, 'code'))); return true; }
+  const rules = [[/^# $/, 'h1'], [/^## $/, 'h2'], [/^### $/, 'h3'], [/^[-*+] $/, 'bullet'], [/^\d+[.)] $/, 'number'], [/^\[ ?\] $/, 'todo'], [/^\[x\] $/i, 'todo!'], [/^[>"] $/, 'quote']];
+  for (const [re, t] of rules) {
+    if (re.test(pre)) {
+      rangeAt(c, 0, pre.length).deleteContents();
+      focusStart(bc(setType(w, t.replace('!', ''), t.endsWith('!')))); return true;
+    }
+  }
+  return false;
+}
+function onInput(e) {
+  const c = e.target.closest && e.target.closest('.bc'); if (!c) return;
+  const w = c.parentElement;
+  if (c.innerHTML === '<br>') c.innerHTML = '';
+  if (e.inputType === 'insertText' && e.data && !e.isComposing) {
+    if (shortcut(w, c)) { syncNote(); return; }
+    if (/\s/.test(e.data) && w.dataset.type !== 'code') linkifyAtCaret(c, false);
+    if (e.data === '/' && w.dataset.type !== 'code') {
+      const off = caretOffset(c), before = c.textContent.charAt(off - 2);
+      if (off === 1 || /\s/.test(before)) { openSlash(c, off - 1); syncNote(); return; }
+    }
+  }
+  if (M.open && M.mode === 'slash') updateSlash();
+  syncNote();
+}
+function linkifyAtCaret(c, atEnd) {
+  const s = getSelection(); if (!s.rangeCount || !s.isCollapsed) return null;
+  const r = s.getRangeAt(0), node = r.startContainer;
+  if (node.nodeType !== 3 || !c.contains(node) || node.parentElement.closest('a,code')) return null;
+  const before = node.data.slice(0, r.startOffset).replace(/ /g, ' ');
+  const m = before.match(atEnd ? /(?:^|\s)((?:https?:\/\/|www\.)[^\s<>"]+)$/i : /(?:^|\s)((?:https?:\/\/|www\.)[^\s<>"]+)\s$/i);
+  if (!m) return null;
+  const url = m[1].replace(TRAIL, ''); if (url.length < 8) return null;
+  const start = before.length - m[1].length - (atEnd ? 0 : 1), end = start + url.length;
+  const rr = document.createRange(); rr.setStart(node, start); rr.setEnd(node, end);
+  const a = document.createElement('a'); a.setAttribute('href', normUrl(url)); rr.surroundContents(a);
+  const rest = before.length - end, nr = document.createRange();
+  if (rest > 0 && a.nextSibling && a.nextSibling.nodeType === 3) nr.setStart(a.nextSibling, rest); else nr.setStartAfter(a);
+  nr.collapse(true); setSel(nr);
+  return a;
+}
+function insertInline(text) {
+  const html = inlineHtml(text);
+  if (html === esc(text).replace(/&quot;/g, '"')) document.execCommand('insertText', false, text);
+  else document.execCommand('insertHTML', false, html);
+}
+function parseLine(line) {
+  const m = [[/^### (.*)/, 'h3'], [/^## (.*)/, 'h2'], [/^# (.*)/, 'h1'], [/^[-*+•] (.*)/, 'bullet'], [/^\d+[.)] (.*)/, 'number'], [/^\[[ x]?\] (.*)/i, 'todo'], [/^> (.*)/, 'quote']];
+  if (/^\s*(-{3,}|\*{3,})\s*$/.test(line)) return { type: 'divider', text: '' };
+  for (const [re, t] of m) { const r = line.match(re); if (r) return { type: t, text: r[1], checked: t === 'todo' && /^\[x\]/i.test(line) }; }
+  return { type: 'p', text: line };
+}
+function onPaste(e) {
+  const c = e.target.closest && e.target.closest('.bc'); if (!c) return;
+  e.preventDefault();
+  const text = (e.clipboardData.getData('text/plain') || '').replace(/\r\n?/g, '\n');
+  if (!text) return;
+  const w = c.parentElement;
+  if (w.dataset.type === 'code') { document.execCommand('insertText', false, text); syncNote(); return; }
+  if (!text.includes('\n')) {
+    const t = text.trim(), sel = getSelection();
+    if (sel.rangeCount && !sel.isCollapsed && /^(https?:\/\/|www\.)\S+$/i.test(t)) {
+      const r = sel.getRangeAt(0), a = document.createElement('a'); a.setAttribute('href', normUrl(t));
+      a.append(r.extractContents()); $$('a', a).forEach(x => x.replaceWith(...x.childNodes)); r.insertNode(a);
+      const nr = document.createRange(); nr.setStartAfter(a); nr.collapse(true); setSel(nr);
+    } else insertInline(text);
+    syncNote(); return;
+  }
+  const lines = text.split('\n');
+  if (lines[0]) insertInline(lines[0]);
+  const s = getSelection().getRangeAt(0);
+  const tail = document.createRange(); tail.selectNodeContents(c); tail.setStart(s.startContainer, s.startOffset);
+  const frag = tail.extractContents();
+  let last = w;
+  lines.slice(1).forEach(l => { const b = parseLine(l); const nb = blockEl({ id: uid(), type: b.type, html: inlineHtml(b.text), checked: b.checked }); last.after(nb); last = nb; });
+  if (!bc(last)) { const nb = newBlock('p'); last.after(nb); last = nb; }
+  const lc = bc(last), mark = lc.childNodes.length; lc.append(frag);
+  lc.focus(); const r = document.createRange(); r.setStart(lc, mark); r.collapse(true); setSel(r);
+  syncNote();
+}
+let DRAGB = null;
+function clearDrop(ed) { $$('.drop-before,.drop-after', ed).forEach(x => x.classList.remove('drop-before', 'drop-after')); }
+function blockAtY(ed, y) {
+  const bs = $$(':scope > .block', ed);
+  return bs.find(b => b.getBoundingClientRect().bottom > y) || bs[bs.length - 1];
+}
+function endDragB(ed) { if (DRAGB) DRAGB.classList.remove('dragging'); DRAGB = null; clearDrop(ed); }
+function bindEditor(ed) {
+  ed.addEventListener('keydown', onKey);
+  ed.addEventListener('input', onInput);
+  ed.addEventListener('paste', onPaste);
+  ed.addEventListener('click', e => {
+    const chk = e.target.closest('.chk');
+    if (chk) { const w = chk.parentElement; w.classList.toggle('checked'); chk.classList.toggle('on'); syncNote(); return; }
+    const g = e.target.closest('.grip');
+    if (g) { openBlockMenu(g.parentElement, g); return; }
+    const a = e.target.closest('.bc a[href]');
+    if (a) { if (e.ctrlKey || e.metaKey) { e.preventDefault(); openUrl(a.href); } else showLP(a, true); }
+  });
+  ed.addEventListener('mouseover', e => {
+    const a = e.target.closest('.bc a[href]'); if (!a || (a === LPA && !LP.hidden)) return;
+    clearTimeout(lpT); lpT = setTimeout(() => showLP(a, false), 300);
+  });
+  ed.addEventListener('mouseout', e => {
+    const a = e.target.closest('.bc a[href]'); if (!a || (e.relatedTarget && a.contains(e.relatedTarget))) return;
+    if (LP.hidden) clearTimeout(lpT); else schedHideLP();
+  });
+  ed.addEventListener('focusout', e => {
+    const c = e.target.closest && e.target.closest('.bc');
+    if (c && c.parentElement.dataset.type !== 'code' && linkifyEl(c)) syncNote();
+  });
+  ed.addEventListener('dragstart', e => {
+    const g = e.target.nodeType === 1 && e.target.closest('.grip'); if (!g) return;
+    DRAGB = g.parentElement; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', '');
+    try { e.dataTransfer.setDragImage(DRAGB, 20, 14); } catch (_) {}
+    setTimeout(() => DRAGB && DRAGB.classList.add('dragging'));
+  });
+  ed.addEventListener('dragover', e => {
+    if (!DRAGB) return; e.preventDefault(); clearDrop(ed);
+    const t = blockAtY(ed, e.clientY); if (!t || t === DRAGB) return;
+    const r = t.getBoundingClientRect(); t.classList.add(e.clientY < r.top + r.height / 2 ? 'drop-before' : 'drop-after');
+  });
+  ed.addEventListener('drop', e => {
+    if (!DRAGB) return; e.preventDefault();
+    const t = $('.drop-before,.drop-after', ed);
+    if (t && t !== DRAGB) t.classList.contains('drop-before') ? t.before(DRAGB) : t.after(DRAGB);
+    endDragB(ed); syncNote();
+  });
+  ed.addEventListener('dragend', () => endDragB(ed));
+}
+function openBlockMenu(w, g) {
+  const items = [
+    { label: 'Xóa', ic: IC.trash, act: 'del', cls: 'danger' },
+    { label: 'Nhân bản', ic: IC.copy, act: 'dup' },
+    { head: 'Chuyển thành' },
+    ...MENU.filter(m => m.t !== 'divider' && m.t !== w.dataset.type).map(m => ({ label: m.label, ic: esc(m.ic), act: 'type', t: m.t }))
+  ];
+  openMenu(g.getBoundingClientRect(), items, it => {
+    if (it.act === 'del') { w.remove(); if (!ED.children.length) ED.append(newBlock('p')); }
+    else if (it.act === 'dup') w.after(blockEl({ ...ser(w), id: uid() }));
+    else { const nb = setType(w, it.t); focusEnd(bc(nb)); }
+    syncNote();
+  }, 'block');
+}
+
+/* ---------- Menus ---------- */
+const MENU_EL = $('#menu');
+const M = { open: false, items: [], sel: [], idx: 0, onPick: null, mode: null };
+function placePop(el, rect) {
+  el.style.left = '0px'; el.style.top = '0px';
+  const w = el.offsetWidth, ht = el.offsetHeight;
+  let x = rect.left, y = rect.bottom + 6;
+  if (x + w > innerWidth - 8) x = innerWidth - w - 8;
+  if (y + ht > innerHeight - 8) y = Math.max(8, rect.top - ht - 6);
+  el.style.left = Math.max(8, x) + 'px'; el.style.top = y + 'px';
+}
+function openMenu(rect, items, onPick, mode) {
+  Object.assign(M, { items, onPick, mode, idx: 0, open: true });
+  drawMenu(); MENU_EL.hidden = false; placePop(MENU_EL, rect);
+}
+function drawMenu() {
+  MENU_EL.className = 'pop menu' + (M.mode === 'slash' ? ' big' : '');
+  MENU_EL.innerHTML = ''; M.sel = [];
+  if (!M.items.length) { MENU_EL.append(h('div', 'mi-empty', 'Không có kết quả')); return; }
+  M.items.forEach(it => {
+    if (it.head) { MENU_EL.append(h('div', 'mi-head', esc(it.head))); return; }
+    const k = M.sel.length; M.sel.push(it);
+    const d = h('div', 'mi' + (it.cls ? ' ' + it.cls : '') + (k === M.idx ? ' on' : ''));
+    d.innerHTML = `<span class="mi-ic">${it.ic || ''}</span><span class="mi-tx"><span>${esc(it.label)}</span>${it.desc ? `<small>${esc(it.desc)}</small>` : ''}</span>`;
+    d.addEventListener('mousedown', e => e.preventDefault());
+    d.addEventListener('mousemove', () => { if (M.idx !== k) { M.idx = k; hl(); } });
+    d.addEventListener('click', () => pick(k));
+    MENU_EL.append(d);
+  });
+}
+function hl() { $$('.mi', MENU_EL).forEach((d, i) => d.classList.toggle('on', i === M.idx)); const on = $('.mi.on', MENU_EL); on && on.scrollIntoView({ block: 'nearest' }); }
+function pick(k) { const it = M.sel[k], f = M.onPick; closeMenu(); if (it && f) f(it); }
+function closeMenu() { M.open = false; M.mode = null; M.onPick = null; MENU_EL.hidden = true; MENU_EL.innerHTML = ''; SLASH = null; }
+document.addEventListener('keydown', e => {
+  if (!M.open || e.isComposing) return;
+  const k = e.key;
+  if (M.mode === 'emoji') { if (k === 'Escape') { e.preventDefault(); closeMenu(); } return; }
+  if (k === 'ArrowDown' || k === 'ArrowUp') {
+    e.preventDefault(); e.stopPropagation(); if (!M.sel.length) return;
+    M.idx = (M.idx + (k === 'ArrowDown' ? 1 : -1) + M.sel.length) % M.sel.length; hl();
+  } else if (k === 'Enter' || k === 'Tab') {
+    if (!M.sel.length) { closeMenu(); return; }
+    e.preventDefault(); e.stopPropagation(); pick(M.idx);
+  } else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); closeMenu(); }
+  else if (M.mode === 'slash' && (k === 'ArrowLeft' || k === 'ArrowRight')) closeMenu();
+}, true);
+document.addEventListener('mousedown', e => { if (M.open && !MENU_EL.contains(e.target)) closeMenu(); }, true);
+
+let SLASH = null;
+function openSlash(c, start) {
+  const s = { c, start };
+  openMenu(caretRect(c), MENU.slice(), it => applySlash(s, it.t), 'slash');
+  SLASH = s;
+}
+function updateSlash() {
+  if (!SLASH) return;
+  const { c, start } = SLASH;
+  if (!c.isConnected) { closeMenu(); return; }
+  const off = caretOffset(c), txt = c.textContent;
+  if (off <= start || txt.charAt(start) !== '/') { closeMenu(); return; }
+  const q = norm(txt.slice(start + 1, off));
+  if (q.length > 24 || /^\s/.test(q)) { closeMenu(); return; }
+  const words = q.split(/\s+/).filter(Boolean);
+  M.items = MENU.filter(m => words.every(wd => norm(m.label + ' ' + m.k).includes(wd)));
+  M.idx = 0;
+  if (!M.items.length && q.length > 3) { closeMenu(); return; }
+  drawMenu(); placePop(MENU_EL, caretRect(c));
+}
+function applySlash(s, t) {
+  const { c, start } = s; if (!c.isConnected) return;
+  const off = Math.max(caretOffset(c), start + 1);
+  rangeAt(c, start, off).deleteContents(); tidy(c);
+  const w = c.parentElement;
+  if (!c.textContent) {
+    if (t === 'divider') { const d = setType(w, 'divider'); const nb = newBlock('p'); d.after(nb); focusStart(bc(nb)); }
+    else focusStart(bc(setType(w, t)));
+  } else if (t === 'divider') { const d = newBlock('divider'); w.after(d); const nb = newBlock('p'); d.after(nb); focusStart(bc(nb)); }
+  else { const nb = newBlock(t); w.after(nb); focusStart(bc(nb)); }
+  syncNote();
+}
+const EMO = '📄 📝 📌 📚 💡 🎯 ✅ ☑️ 🗂️ 📅 🗓️ 📊 📈 💼 🏦 💳 🧴 💄 ✨ 🌿 💧 🔬 🧪 🎨 🎬 📷 🚀 ⭐ 🔥 ❤️ 🧠 🛒 📦 🏠 ✈️ 🍜 🏃 🎵 🌙 👋'.split(' ');
+function openEmoji(anchor, onPick) {
+  Object.assign(M, { open: true, mode: 'emoji', items: [], sel: [] });
+  MENU_EL.className = 'pop emo'; MENU_EL.innerHTML = '';
+  EMO.forEach(em => { const b = h('button', '', em); b.onclick = () => { closeMenu(); onPick(em); }; MENU_EL.append(b); });
+  MENU_EL.hidden = false; placePop(MENU_EL, anchor.getBoundingClientRect());
+}
+
+/* ---------- Format toolbar ---------- */
+const FMT = $('#fmt'); let fmtT = null;
+function selInBlock() {
+  const s = getSelection(); if (!s.rangeCount || s.isCollapsed || !ED) return null;
+  const r = s.getRangeAt(0), n = r.commonAncestorContainer, el = n.nodeType === 1 ? n : n.parentElement;
+  const c = el && el.closest('.bc');
+  if (!c || !ED.contains(c) || c.parentElement.dataset.type === 'code' || !r.toString().trim()) return null;
+  return r;
+}
+function updFmt() {
+  const r = selInBlock(); if (!r) { FMT.hidden = true; return; }
+  FMT.hidden = false;
+  const rect = r.getBoundingClientRect(), w = FMT.offsetWidth, ht = FMT.offsetHeight;
+  let x = rect.left + rect.width / 2 - w / 2, y = rect.top - ht - 8;
+  if (y < 8 || (window.matchMedia && matchMedia('(pointer:coarse)').matches)) y = rect.bottom + 10;
+  FMT.style.left = Math.max(8, Math.min(x, innerWidth - w - 8)) + 'px'; FMT.style.top = y + 'px';
+}
+document.addEventListener('selectionchange', () => { clearTimeout(fmtT); fmtT = setTimeout(updFmt, 80); });
+$('#scroll').addEventListener('scroll', () => { if (!FMT.hidden) updFmt(); });
+function wrapToggle(tag) {
+  const s = getSelection(); if (!s.rangeCount) return;
+  const r = s.getRangeAt(0), n = r.commonAncestorContainer, el = n.nodeType === 1 ? n : n.parentElement;
+  const anc = el.closest(tag);
+  if (anc && anc.closest('.bc')) { anc.replaceWith(...anc.childNodes); return; }
+  const w = document.createElement(tag); w.append(r.extractContents()); r.insertNode(w);
+  const nr = document.createRange(); nr.selectNodeContents(w); setSel(nr);
+}
+FMT.addEventListener('mousedown', e => e.preventDefault());
+FMT.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const cmd = b.dataset.cmd;
+  if (['bold', 'italic', 'underline', 'strikeThrough'].includes(cmd)) document.execCommand(cmd);
+  else if (cmd === 'code' || cmd === 'mark') wrapToggle(cmd);
+  else if (cmd === 'link') { linkFromSelection(); return; }
+  syncNote(); updFmt();
+});
+
+/* ---------- Link popover ---------- */
+const LP = h('div', 'pop lp'); LP.id = 'linkpop'; LP.hidden = true;
+LP.innerHTML = `<div class="lp-view"><a class="lp-url" target="_blank" rel="noopener noreferrer">${IC.globe}<span></span></a><span class="sep"></span><button class="lp-btn" data-lp="open" title="Mở trong tab mới (hoặc Ctrl/⌘ + click vào link)">${IC.ext}<span>Mở</span></button><button class="lp-btn" data-lp="copy" title="Sao chép link">${IC.copy}<span>Sao chép</span></button><button class="lp-btn" data-lp="edit" title="Sửa link hoặc đổi chữ hiển thị">${IC.edit}<span>Sửa</span></button><button class="lp-btn danger" data-lp="unlink" title="Bỏ link, giữ lại chữ">${IC.unlink}</button></div><form class="lp-edit" autocomplete="off"><label>Chữ hiển thị<input name="text" placeholder="Ví dụ: Form đăng ký journey"></label><label>Link<input name="url" placeholder="https://…"></label><div class="lp-row"><button type="button" class="btn" data-lp="cancel">Hủy</button><button type="submit" class="btn primary">Lưu</button></div></form>`;
+document.body.append(LP);
+let LPA = null, lpSticky = false, lpNew = false, lpT = null;
+const lpForm = $('form', LP);
+const openUrl = u => window.open(u, '_blank', 'noopener');
+const prettyUrl = u => u.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, '');
+const rectOf = a => { const rs = a.getClientRects(); return rs.length ? rs[rs.length - 1] : a.getBoundingClientRect(); };
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; }
+  catch (_) {
+    const ta = h('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;top:0;opacity:0'; document.body.append(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch (__) {} ta.remove(); return ok;
+  }
+}
+function showLP(a, sticky) {
+  clearTimeout(lpT);
+  if (!a || !a.isConnected) return;
+  if (LPA === a && !LP.hidden) { if (sticky) lpSticky = true; return; }
+  if (LPA && LP.classList.contains('editing')) return;
+  LPA = a; lpSticky = !!sticky; lpNew = false; LP.classList.remove('editing');
+  const u = $('.lp-url', LP); u.href = a.href; u.title = a.href; $('span', u).textContent = prettyUrl(a.href);
+  LP.hidden = false; placePop(LP, rectOf(a));
+}
+function hideLP() { clearTimeout(lpT); LP.hidden = true; LP.classList.remove('editing'); LPA = null; lpSticky = false; lpNew = false; }
+function schedHideLP() { if (lpSticky || LP.classList.contains('editing')) return; clearTimeout(lpT); lpT = setTimeout(hideLP, 280); }
+function editLP() {
+  if (!LPA) return;
+  lpSticky = true; LP.classList.add('editing');
+  lpForm.text.value = LPA.textContent; lpForm.url.value = LPA.getAttribute('href') || '';
+  placePop(LP, rectOf(LPA));
+  const f = lpNew ? lpForm.url : lpForm.text; f.focus(); f.select();
+}
+function unwrap(a) { if (a && a.isConnected) a.replaceWith(...a.childNodes); }
+function cancelLP() { const a = LPA, wasNew = lpNew; hideLP(); if (wasNew) { unwrap(a); syncNote(); } }
+function saveLP() {
+  const a = LPA; if (!a) return;
+  const url = lpForm.url.value.trim(), text = lpForm.text.value.trim();
+  hideLP();
+  if (!url) { unwrap(a); syncNote(); return; }
+  a.setAttribute('href', normUrl(url));
+  const t = text || url; if (a.textContent !== t) a.textContent = t;
+  const c = a.closest('.bc'); if (c) { c.focus(); const r = document.createRange(); r.setStartAfter(a); r.collapse(true); setSel(r); }
+  syncNote();
+}
+function linkFromSelection() {
+  const r = selInBlock(); if (!r) return false;
+  const n = r.commonAncestorContainer, el = n.nodeType === 1 ? n : n.parentElement;
+  const ex = el.closest('a[href]');
+  FMT.hidden = true;
+  if (ex && ex.closest('.bc')) { showLP(ex, true); editLP(); return true; }
+  const txt = r.toString().trim(), isUrl = /^(https?:\/\/|www\.)\S+$/i.test(txt);
+  const a = document.createElement('a'); a.setAttribute('href', isUrl ? normUrl(txt) : '');
+  a.append(r.extractContents()); $$('a', a).forEach(x => x.replaceWith(...x.childNodes)); r.insertNode(a);
+  getSelection().removeAllRanges();
+  if (isUrl) { syncNote(); showLP(a, true); } else { showLP(a, true); lpNew = true; editLP(); }
+  return true;
+}
+LP.addEventListener('mousedown', e => { if (!e.target.closest('input')) e.preventDefault(); });
+LP.addEventListener('mouseenter', () => clearTimeout(lpT));
+LP.addEventListener('mouseleave', schedHideLP);
+LP.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') { e.preventDefault(); cancelLP(); } });
+lpForm.addEventListener('submit', e => { e.preventDefault(); saveLP(); });
+LP.addEventListener('click', e => {
+  const b = e.target.closest('[data-lp]'); if (!b || !LPA) return;
+  const act = b.dataset.lp;
+  if (act === 'open') openUrl(LPA.href);
+  else if (act === 'copy') copyText(LPA.href).then(ok => { const sp = $('span', b); sp.textContent = ok ? 'Đã chép ✓' : 'Không chép được'; setTimeout(() => sp.textContent = 'Sao chép', 1300); });
+  else if (act === 'edit') editLP();
+  else if (act === 'unlink') { const a = LPA; hideLP(); unwrap(a); syncNote(); }
+  else if (act === 'cancel') cancelLP();
+});
+document.addEventListener('mousedown', e => {
+  if (LP.hidden || LP.contains(e.target) || (e.target.closest && e.target.closest('.bc a[href]'))) return;
+  if (LP.classList.contains('editing')) cancelLP(); else hideLP();
+}, true);
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (!LP.hidden) hideLP();
+  if (!FMT.hidden) FMT.hidden = true;
+});
+$('#scroll').addEventListener('scroll', () => { if (LP.hidden) return; if (LP.classList.contains('editing') && LPA) placePop(LP, rectOf(LPA)); else hideLP(); });
+
+/* ---------- Board ---------- */
+let DRAGT = null, RENDERING = false, MTABS = null, MCOL = 'todo';
+function renderBoard(p, host) {
+  p.tasks = p.tasks || [];
+  p.tasks.filter(t => !(t.text || '').trim()).forEach(t => killTask(p, t));
+  MTABS = h('div', 'mtabs'); host.append(MTABS);
+  BOARD = h('div', 'board'); host.append(BOARD); drawBoard(p);
+}
+function metaTask(t) {
+  const last = (t.history || [])[t.history.length - 1];
+  let txt;
+  if (!last || last.from == null) txt = `Tạo lúc ${fmt(t.createdAt, true)}`;
+  else if (t.col === 'done') txt = `Xong lúc ${fmt(t.movedAt, true)}`;
+  else txt = `${colName(last.from)} → ${colName(last.to)} · ${fmt(t.movedAt, true)}`;
+  return `${IC.clock}<span>${esc(txt)}</span>`;
+}
+function histHtml(t) {
+  return (t.history || []).slice().reverse().map(e =>
+    `<div><b style="font-weight:500">${esc(e.from ? colName(e.from) + ' → ' + colName(e.to) : 'Tạo trong ' + colName(e.to))}</b><span>${fmt(e.at)}</span></div>`).join('');
+}
+function updateCounts(p) {
+  if (!BOARD) return;
+  $$('.col', BOARD).forEach(ce => { $('.cnt', ce).textContent = p.tasks.filter(t => t.col === ce.dataset.col).length; });
+  if (MTABS) $$('button .n', MTABS).forEach((n, i) => { n.textContent = p.tasks.filter(t => t.col === COLS[i].id).length; });
+  updateMeta();
+}
+function killTask(p, t) {
+  const i = p.tasks.indexOf(t); if (i >= 0) p.tasks.splice(i, 1);
+  (p.ttomb = p.ttomb || {})[t.id] = now();
+}
+function moveTask(p, t, to, beforeId) {
+  if (t.col !== to) { const at = now(); t.history = t.history || []; t.history.push({ from: t.col, to, at }); t.col = to; t.movedAt = at; }
+  t.updatedAt = now();
+  p.tasks.splice(p.tasks.indexOf(t), 1);
+  let i = beforeId ? p.tasks.findIndex(x => x.id === beforeId) : -1;
+  if (i < 0) { let last = -1; p.tasks.forEach((x, j) => { if (x.col === to) last = j; }); i = last < 0 ? p.tasks.length : last + 1; }
+  p.tasks.splice(i, 0, t);
+}
+function addTask(p, col, afterId, top) {
+  const at = now();
+  const t = { id: uid(), text: '', col, createdAt: at, movedAt: at, updatedAt: at, history: [{ from: null, to: col, at }] };
+  if (afterId) p.tasks.splice(p.tasks.findIndex(x => x.id === afterId) + 1, 0, t);
+  else if (top) { const i = p.tasks.findIndex(x => x.col === col); i < 0 ? p.tasks.push(t) : p.tasks.splice(i, 0, t); }
+  else p.tasks.push(t);
+  drawBoard(p);
+  const tx = BOARD.querySelector(`.card[data-id="${t.id}"] .ttext`); tx && focusEnd(tx);
+}
+function removeLine() { $$('.drop-line', BOARD || document).forEach(x => x.remove()); }
+function placeLine(list, y) {
+  const cards = $$('.card:not(.dragging)', list);
+  const next = cards.find(c => { const r = c.getBoundingClientRect(); return y < r.top + r.height / 2; }) || null;
+  const ex = $('.drop-line', BOARD);
+  if (ex && ex.parentElement === list) {
+    let n = ex.nextElementSibling; while (n && n.classList.contains('dragging')) n = n.nextElementSibling;
+    if (n === next) return;
+  }
+  removeLine();
+  const line = h('div', 'drop-line');
+  next ? list.insertBefore(line, next) : list.append(line);
+}
+function cardEl(p, t) {
+  const c = h('div', 'card' + (t.col === 'done' ? ' is-done' : '')); c.dataset.id = t.id; c.draggable = true;
+  const chk = h('button', 'tchk' + (t.col === 'done' ? ' on' : ''), IC.check);
+  chk.title = t.col === 'backlog' ? 'Tick → chuyển sang To-do' : t.col === 'todo' ? 'Tick → chuyển sang Done' : 'Bỏ tick → mở lại (về To-do)';
+  const tx = h('div', 'ttext'); tx.contentEditable = 'true'; tx.spellcheck = false; tx.dataset.ph = 'Nhập tên task…'; tx.textContent = t.text || ''; linkifyEl(tx);
+  const del = h('button', 'tdel', IC.trash); del.title = 'Xóa task';
+  const more = h('button', 'tmore', IC.dots); more.title = 'Tùy chọn task';
+  const meta = h('div', 'tmeta', metaTask(t)); meta.title = 'Bấm để xem lịch sử chuyển cột';
+  const hist = h('div', 'thist', histHtml(t));
+  c.append(chk, tx, del, more, meta, hist);
+
+  chk.addEventListener('click', e => {
+    e.stopPropagation(); if (c.dataset.moving) return;
+    if (!t.text.trim()) { tx.focus(); return; }
+    c.dataset.moving = '1';
+    const to = t.col === 'backlog' ? 'todo' : t.col === 'todo' ? 'done' : 'todo';
+    chk.classList.toggle('on', t.col !== 'done');
+    setTimeout(() => c.classList.add('leaving'), 120);
+    setTimeout(() => {
+      const first = p.tasks.find(x => x.col === to && x.id !== t.id);
+      moveTask(p, t, to, first ? first.id : null); touch(p);
+      if (innerWidth <= 760) { drawBoard(p); toast('Đã chuyển sang ' + colName(to), 'Xem', () => { MCOL = to; drawBoard(p, t.id); }); }
+      else drawBoard(p, t.id);
+    }, 380);
+  });
+  tx.addEventListener('mousedown', () => { c.draggable = false; });
+  tx.addEventListener('click', e => { const a = e.target.closest('a[href]'); if (a) { e.preventDefault(); openUrl(a.href); } });
+  tx.addEventListener('input', () => { if (tx.innerHTML === '<br>') tx.innerHTML = ''; t.text = tx.textContent.replace(/\n/g, ' '); t.updatedAt = now(); touch(p); });
+  tx.addEventListener('keydown', e => {
+    if (e.isComposing || e.keyCode === 229) return;
+    if (e.key === 'Enter') { e.preventDefault(); if (t.text.trim()) addTask(p, t.col, t.id); else tx.blur(); }
+    else if (e.key === 'Escape') tx.blur();
+  });
+  tx.addEventListener('paste', e => { e.preventDefault(); document.execCommand('insertText', false, (e.clipboardData.getData('text/plain') || '').replace(/\s*\n\s*/g, ' ')); });
+  tx.addEventListener('focusout', () => {
+    c.draggable = true;
+    if (RENDERING) return;
+    t.text = t.text.trim();
+    if (!t.text && p.tasks.includes(t)) { killTask(p, t); c.remove(); touch(p); updateCounts(p); }
+    else if (t.text) { touch(p); linkifyEl(tx); }
+  });
+  meta.addEventListener('click', () => c.classList.toggle('show-hist'));
+  more.addEventListener('click', e => {
+    e.stopPropagation();
+    const items = COLS.filter(x => x.id !== t.col).map(x => ({ label: 'Chuyển sang ' + x.name, ic: IC.arrow, to: x.id }));
+    items.push({ label: 'Xóa task', ic: IC.trash, cls: 'danger', del: true });
+    openMenu(more.getBoundingClientRect(), items, it => {
+      if (it.del) { killTask(p, t); touch(p); drawBoard(p); return; }
+      const first = p.tasks.find(x => x.col === it.to && x.id !== t.id);
+      moveTask(p, t, it.to, first ? first.id : null); touch(p); drawBoard(p);
+      toast('Đã chuyển sang ' + colName(it.to), 'Xem', () => { MCOL = it.to; drawBoard(p, t.id); });
+    }, 'task');
+  });
+  del.addEventListener('click', e => { e.stopPropagation(); killTask(p, t); c.remove(); touch(p); updateCounts(p); });
+  c.addEventListener('click', e => { if (e.target === c) focusEnd(tx); });
+  c.addEventListener('dragstart', e => {
+    DRAGT = t.id; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', t.text || ' ');
+    requestAnimationFrame(() => c.classList.add('dragging'));
+  });
+  c.addEventListener('dragend', () => { c.classList.remove('dragging'); DRAGT = null; removeLine(); });
+  return c;
+}
+function fadeOf(l) {
+  const t = l.scrollTop > 2, b = l.scrollTop + l.clientHeight < l.scrollHeight - 2;
+  l.classList.toggle('fade-t', t); l.classList.toggle('fade-b', b);
+}
+/* Each column is capped so it ends at the bottom of the window; its task list scrolls inside. */
+function fitBoard() {
+  if (!BOARD || !BOARD.isConnected) return;
+  const sc = $('#scroll');
+  const top = BOARD.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop;
+  BOARD.style.setProperty('--colmax', Math.max(340, sc.clientHeight - top - 40) + 'px');
+  $$('.cards', BOARD).forEach(fadeOf);
+}
+function drawBoard(p, flashId) {
+  if (!BOARD) return;
+  RENDERING = true;
+  const sx = BOARD.scrollLeft, sy = {};
+  $$('.cards', BOARD).forEach(l => { sy[l.parentElement.dataset.col] = l.scrollTop; });
+  BOARD.innerHTML = '';
+  COLS.forEach(col => {
+    const tasks = p.tasks.filter(t => t.col === col.id);
+    const ce = h('div', 'col col-' + col.id); ce.dataset.col = col.id;
+    const hd = h('div', 'col-head', `<span class="pill"><i></i>${col.name}</span><span class="cnt">${tasks.length}</span><span class="sp"></span>`);
+    if (col.id === 'done') {
+      const b = h('button', 'ibtn', IC.dots); b.title = 'Tùy chọn cột';
+      b.onclick = () => openMenu(b.getBoundingClientRect(), [{ label: 'Xóa tất cả task đã xong', ic: IC.trash, cls: 'danger' }], () => {
+        const n = p.tasks.filter(t => t.col === 'done').length;
+        if (n && confirm(`Xóa ${n} task đã xong?`)) { p.tasks.filter(t => t.col === 'done').forEach(t => killTask(p, t)); touch(p); drawBoard(p); }
+      }, 'col');
+      hd.append(b);
+    }
+    const plus = h('button', 'ibtn', IC.plus); plus.title = 'Thêm task lên đầu cột';
+    plus.onclick = () => addTask(p, col.id, null, true);
+    hd.append(plus);
+    const list = h('div', 'cards');
+    tasks.forEach(t => list.append(cardEl(p, t)));
+    const add = h('button', 'add-card', IC.plus + '<span>Mới</span>');
+    add.onclick = () => addTask(p, col.id);
+    ce.append(hd, list, add);
+    list.addEventListener('scroll', () => fadeOf(list), { passive: true });
+    ce.addEventListener('dragover', e => { if (!DRAGT) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; placeLine(list, e.clientY); });
+    ce.addEventListener('dragleave', e => { if (!ce.contains(e.relatedTarget)) removeLine(); });
+    ce.addEventListener('drop', e => {
+      if (!DRAGT) return; e.preventDefault();
+      const line = $('.drop-line', BOARD); let before = null;
+      if (line) { let n = line.nextElementSibling; while (n && (!n.classList.contains('card') || n.dataset.id === DRAGT)) n = n.nextElementSibling; before = n ? n.dataset.id : null; }
+      const t = p.tasks.find(x => x.id === DRAGT);
+      removeLine(); DRAGT = null;
+      if (t) { moveTask(p, t, col.id, before); touch(p); drawBoard(p, t.id); }
+    });
+    BOARD.append(ce);
+  });
+  BOARD.scrollLeft = sx;
+  $$('.cards', BOARD).forEach(l => { l.scrollTop = sy[l.parentElement.dataset.col] || 0; });
+  BOARD.dataset.m = MCOL;
+  if (MTABS) {
+    MTABS.innerHTML = '';
+    COLS.forEach(col => {
+      const b = h('button', col.id === MCOL ? 'on' : '', `${col.name}<span class="n">${p.tasks.filter(t => t.col === col.id).length}</span>`);
+      b.onclick = () => { MCOL = col.id; drawBoard(p); };
+      MTABS.append(b);
+    });
+    const add = h('button', '', IC.plus); add.title = 'Thêm task'; add.style.flex = '0 0 40px';
+    add.onclick = () => addTask(p, MCOL, null, true);
+    MTABS.append(add);
+  }
+  fitBoard();
+  RENDERING = false;
+  updateMeta();
+  if (flashId) {
+    const el = BOARD.querySelector(`.card[data-id="${flashId}"]`);
+    if (el) { el.classList.add('flash'); el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' }); setTimeout(() => el.classList.remove('flash'), 1500); }
+  }
+}
+
+/* ---------- Export / import ---------- */
+function download(name, text, type) {
+  const a = h('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+}
+function stamp() { const d = new Date(); return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`; }
+function htmlToMd(html) {
+  const body = new DOMParser().parseFromString('<body>' + (html || ''), 'text/html').body;
+  const walk = n => [...n.childNodes].map(x => {
+    if (x.nodeType === 3) return x.data;
+    if (x.nodeType !== 1) return '';
+    const inner = walk(x);
+    switch (x.tagName) {
+      case 'B': case 'STRONG': return inner ? `**${inner}**` : '';
+      case 'I': case 'EM': return inner ? `*${inner}*` : '';
+      case 'S': case 'STRIKE': return inner ? `~~${inner}~~` : '';
+      case 'CODE': return '`' + inner + '`';
+      case 'MARK': return inner ? `==${inner}==` : '';
+      case 'A': return `[${inner}](${x.getAttribute('href') || ''})`;
+      case 'BR': return '\n';
+      default: return inner;
+    }
+  }).join('');
+  return walk(body);
+}
+function pageToMd(p) {
+  let out = `# ${p.title || 'Không có tiêu đề'}\n\n`;
+  if (p.type === 'note') {
+    let n = 0;
+    p.blocks.forEach(b => {
+      const t = htmlToMd(b.html);
+      n = b.type === 'number' ? n + 1 : 0;
+      out += ({ h1: `# ${t}`, h2: `## ${t}`, h3: `### ${t}`, bullet: `- ${t}`, number: `${n}. ${t}`, todo: `- [${b.checked ? 'x' : ' '}] ${t}`, quote: `> ${t}`, code: '```\n' + t + '\n```', divider: '---' }[b.type] ?? t) + '\n\n';
+    });
+  } else {
+    COLS.forEach(col => {
+      out += `## ${col.name}\n\n`;
+      p.tasks.filter(t => t.col === col.id).forEach(t => { out += `- [${t.col === 'done' ? 'x' : ' '}] ${t.text} _(${t.col === 'done' ? 'Xong' : 'Cập nhật'} ${fmt(t.movedAt)})_\n`; });
+      out += '\n';
+    });
+  }
+  return out.replace(/\n{3,}/g, '\n\n');
+}
+$('#exportBtn').onclick = () => { saveNow(); download(`notelite-backup-${stamp()}.json`, JSON.stringify(S, null, 2), 'application/json'); };
+$('#importBtn').onclick = () => $('#importFile').click();
+/* Merge an exported/old NoteLite dataset into the current one. Returns number of pages imported. */
+function importData(d, ask) {
+  if (!d || typeof d.pages !== 'object') throw new Error('bad');
+  const ids = Object.keys(d.pages).filter(id => d.pages[id] && ['note', 'board'].includes(d.pages[id].type));
+  if (!ids.length) throw new Error('empty');
+  if (ask && !confirm(ask.replace('{n}', ids.length))) return 0;
+  const t = now();
+  dropPristineSeed(S);
+  if (d.folders && typeof d.folders === 'object') Object.keys(d.folders).forEach(fid => {
+    const fo = d.folders[fid]; if (!fo) return;
+    const ex = S.folders[fid];
+    S.folders[fid] = { id: fid, name: String(fo.name || 'Thư mục').slice(0, 80), open: ex ? ex.open : !!fo.open, createdAt: +fo.createdAt || t, updatedAt: Math.max(+fo.updatedAt || 0, t) };
+    delete S.tomb[fid];
+    if (!S.folderOrder.includes(fid)) S.folderOrder.push(fid);
+  });
+  ids.forEach(id => {
+    const pg = d.pages[id]; pg.id = id;
+    pg.folder = typeof pg.folder === 'string' ? pg.folder : null;
+    pg.title = String(pg.title || ''); pg.icon = String(pg.icon || (pg.type === 'note' ? '📄' : '✅')).slice(0, 8);
+    pg.createdAt = +pg.createdAt || t; pg.updatedAt = +pg.updatedAt || t;
+    delete pg.seed;
+    if (S.tomb[id] || (S.pages[id] && S.pages[id].updatedAt >= pg.updatedAt)) pg.updatedAt = t;
+    delete S.tomb[id];
+    if (pg.type === 'note') pg.blocks = Array.isArray(pg.blocks) ? pg.blocks : [];
+    else pg.tasks = (Array.isArray(pg.tasks) ? pg.tasks : []).filter(x => x && COLS.some(c => c.id === x.col)).map(x => ({ ...x, text: String(x.text || ''), history: Array.isArray(x.history) ? x.history : [], updatedAt: +x.updatedAt || t }));
+    S.pages[id] = pg; if (!S.order.includes(id)) S.order.push(id);
+  });
+  S.orderAt = S.folderOrderAt = t;
+  if (!S.pages[S.active]) S.active = ids[0];
+  fix(S);
+  save(); render();
+  return ids.length;
+}
+/* Seed (welcome) pages the user never touched: removed when real data arrives from elsewhere. */
+function dropPristineSeed(st) {
+  const seedIds = Object.keys(st.pages).filter(id => st.pages[id].seed && st.pages[id].updatedAt === st.pages[id].createdAt);
+  const t = now();
+  st.tomb = st.tomb || {};
+  seedIds.forEach(id => { delete st.pages[id]; st.tomb[id] = t; });
+  st.order = st.order.filter(id => st.pages[id]);
+  Object.keys(st.folders).forEach(fid => {
+    const f = st.folders[fid];
+    if (f.seed && f.updatedAt === f.createdAt && !Object.values(st.pages).some(p => p.folder === fid)) {
+      delete st.folders[fid]; st.tomb[fid] = t; st.folderOrder = st.folderOrder.filter(x => x !== fid);
+    }
+  });
+  return seedIds.length > 0;
+}
+$('#importFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try { importData(JSON.parse(await f.text()), `Nhập {n} trang từ "${f.name}"?\nTrang trùng sẽ được cập nhật theo file, các trang khác giữ nguyên.`); }
+  catch (err) { alert('File không hợp lệ. Hãy chọn file .json được xuất từ NoteLite.'); }
+});
+$('#moreBtn').onclick = () => {
+  const p = cur(); if (!p) return;
+  openMenu($('#moreBtn').getBoundingClientRect(), [
+    { label: 'Chuyển vào thư mục…', ic: IC.folder, act: 'move' },
+    { label: 'Di chuyển lên', ic: IC.mvUp, act: 'up' },
+    { label: 'Di chuyển xuống', ic: IC.mvDown, act: 'down' },
+    { label: 'Xuất trang ra Markdown (.md)', ic: IC.md, act: 'md' },
+    { label: 'Nhân bản trang', ic: IC.copy, act: 'dup' },
+    { label: 'Xóa trang', ic: IC.trash, act: 'del', cls: 'danger' }
+  ], it => {
+    if (it.act === 'move') openMoveMenu(p, $('#moreBtn').getBoundingClientRect());
+    else if (it.act === 'md') download(`${(p.title || 'trang').replace(/[\\/:*?"<>|]+/g, '-').slice(0, 60)}.md`, pageToMd(p), 'text/markdown');
+    else if (it.act === 'dup') duplicatePage(p.id);
+    else if (it.act === 'up' || it.act === 'down') stepPage(p.id, it.act === 'up' ? -1 : 1);
+    else deletePage(p.id);
+  }, 'page');
+};
+
+/* ---------- Sync via a secret GitHub Gist, end-to-end encrypted ----------
+   Data is encrypted on the device (AES-256-GCM, key from the user's sync password via PBKDF2)
+   before it leaves; GitHub only ever stores ciphertext. Works from file://, localhost and https. */
+const GH = window.NOTELITE_GH_API || 'https://api.github.com';
+const GIST_FILE = 'notelite.enc.json';
+const GIST_DESC = 'NoteLite — dữ liệu đồng bộ (đã mã hóa)';
+const TOKEN_URL = 'https://github.com/settings/tokens/new?scopes=gist&description=NoteLite%20Sync';
+const WRITE_GAP = +window.NOTELITE_SYNC_GAP || 10000;      // min ms between two uploads (GitHub rate limits)
+const POLL_MS = +window.NOTELITE_POLL_MS || 20000;
+const KDF_ITER = 310000;
+const WEB = /^https?:$/.test(location.protocol);
+const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const STANDALONE = !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
+const SKEY = 'notelite.sync';
+const SYNC_KEYS = ['pages', 'order', 'orderAt', 'folders', 'folderOrder', 'folderOrderAt', 'tomb', 'today'];
+const SM = { token: '', gist: '', key: '', salt: '', iter: 0, login: '', ver: '', etag: '', base: {}, last: 0, skipSetup: false };
+let CK = null, syncTimer = null, syncing = false, pending = true, haveRemote = false, lastInputAt = 0, lastWriteAt = 0;
+let syncState = 'off';
+try { Object.assign(SM, JSON.parse(localStorage.getItem(SKEY) || '{}')); } catch (_) {}
+const saveSM = () => { try { localStorage.setItem(SKEY, JSON.stringify(SM)); } catch (_) {} };
+const configured = () => !!(SM.token && SM.gist && SM.key);
+
+/* ---- merge (state-based: every device can merge any two versions and reach the same result) ---- */
+function canon(v) {
+  if (Array.isArray(v)) return '[' + v.map(canon).join(',') + ']';
+  if (v && typeof v === 'object') return '{' + Object.keys(v).filter(k => v[k] !== undefined).sort().map(k => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}';
+  return JSON.stringify(v === undefined ? null : v);
+}
+const tsOf = x => (x && (+x.updatedAt || +x.createdAt)) || 0;
+const taskTs = t => +t.updatedAt || +t.movedAt || +t.createdAt || 0;
+function pickW(a, b, ts = tsOf) {
+  const ta = ts(a), tb = ts(b);
+  if (ta !== tb) return ta > tb ? a : b;
+  return canon(a) >= canon(b) ? a : b;
+}
+function mergeTomb(a, b) { const r = { ...(a || {}) }; for (const k in (b || {})) r[k] = Math.max(r[k] || 0, b[k]); return r; }
+function mergeBoard(a, b) {
+  const hi = pickW(a, b), lo = hi === a ? b : a;
+  const ttomb = mergeTomb(a.ttomb, b.ttomb);
+  const win = new Map();
+  [...(lo.tasks || []), ...(hi.tasks || [])].forEach(t => { const e = win.get(t.id); win.set(t.id, e ? pickW(e, t, taskTs) : t); });
+  const out = [], seen = new Set();
+  [...(hi.tasks || []), ...(lo.tasks || [])].forEach(t => {
+    if (seen.has(t.id)) return; seen.add(t.id);
+    const w = win.get(t.id);
+    if (ttomb[t.id] && ttomb[t.id] >= taskTs(w)) return;
+    out.push(w);
+  });
+  const r = { ...hi, tasks: out, updatedAt: Math.max(tsOf(a), tsOf(b)) };
+  if (Object.keys(ttomb).length) r.ttomb = ttomb; else delete r.ttomb;
+  return r;
+}
+/* L, R: two versions. base[id] = page timestamp this device last saw on GitHub → edits on both sides since then = conflict → keep a copy */
+function mergeDocs(L, R, base) {
+  const tomb = mergeTomb(L.tomb, R.tomb);
+  const pages = {}, copies = [];
+  new Set([...Object.keys(L.pages || {}), ...Object.keys(R.pages || {})]).forEach(id => {
+    const a = (L.pages || {})[id], b = (R.pages || {})[id];
+    let w;
+    if (a && b) {
+      if (a.type === 'board' && b.type === 'board') w = mergeBoard(a, b);
+      else {
+        w = pickW(a, b);
+        const bs = base[id], lo = w === a ? b : a;
+        if (bs != null && tsOf(a) > bs && tsOf(b) > bs && a.type === 'note' && canon([a.title, a.blocks]) !== canon([b.title, b.blocks])) copies.push(lo);
+      }
+    } else w = a || b;
+    if (tomb[id] && tomb[id] >= tsOf(w)) return;
+    pages[id] = w;
+  });
+  const folders = {};
+  new Set([...Object.keys(L.folders || {}), ...Object.keys(R.folders || {})]).forEach(id => {
+    const a = (L.folders || {})[id], b = (R.folders || {})[id];
+    const w = a && b ? pickW(a, b) : (a || b);
+    if (tomb[id] && tomb[id] >= tsOf(w)) return;
+    folders[id] = w;
+  });
+  const pickArr = (la, lt, ra, rt) => (lt !== rt ? (lt > rt ? la : ra) : (canon(la) >= canon(ra) ? la : ra)) || [];
+  let order = pickArr(L.order, +L.orderAt || 0, R.order, +R.orderAt || 0).filter(id => pages[id]);
+  const folderOrder = pickArr(L.folderOrder, +L.folderOrderAt || 0, R.folderOrder, +R.folderOrderAt || 0).filter(id => folders[id]);
+  const missing = Object.keys(pages).filter(id => !order.includes(id)).sort((x, y) => tsOf(pages[y]) - tsOf(pages[x]) || (x < y ? -1 : 1));
+  order = [...missing, ...order];
+  Object.keys(folders).sort().forEach(id => { if (!folderOrder.includes(id)) folderOrder.push(id); });
+  copies.forEach(o => {
+    const c = JSON.parse(JSON.stringify(o));
+    c.id = uid(); c.title = (o.title || 'Không có tiêu đề') + ' (bản xung đột)'; c.updatedAt = now();
+    pages[c.id] = c; order.splice(Math.max(0, order.indexOf(o.id) + 1), 0, c.id);
+  });
+  return {
+    pages, order, orderAt: Math.max(+L.orderAt || 0, +R.orderAt || 0) + (copies.length ? 1 : 0),
+    folders, folderOrder, folderOrderAt: Math.max(+L.folderOrderAt || 0, +R.folderOrderAt || 0), tomb,
+    today: L.today && R.today ? pickW(L.today, R.today) : (L.today || R.today || undefined)
+  };
+}
+const docOf = st => { const d = {}; SYNC_KEYS.forEach(k => { d[k] = st[k]; }); return d; };
+const emptyDoc = () => ({ pages: {}, order: [], orderAt: 0, folders: {}, folderOrder: [], folderOrderAt: 0, tomb: {} });
+const tsMap = d => { const m = {}; Object.keys(d.pages || {}).forEach(id => { m[id] = tsOf(d.pages[id]); }); return m; };
+
+/* ---- encryption ---- */
+const b64 = buf => { const a = new Uint8Array(buf); let s = ''; for (let i = 0; i < a.length; i += 0x8000) s += String.fromCharCode.apply(null, a.subarray(i, i + 0x8000)); return btoa(s); };
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function deriveKey(pass, saltB64, iter) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass.normalize('NFC')), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: unb64(saltB64), iterations: iter }, base, { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+}
+async function pipeBytes(bytes, stream) { return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer()); }
+async function seal(doc) {
+  let bytes = new TextEncoder().encode(JSON.stringify(doc)), z = 0;
+  if (window.CompressionStream) { try { const c = await pipeBytes(bytes, new CompressionStream('gzip')); if (c.length < bytes.length) { bytes = c; z = 1; } } catch (_) {} }
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, CK, bytes);
+  return JSON.stringify({ app: 'NoteLite', v: 1, note: 'Dữ liệu NoteLite đã mã hóa (AES-256-GCM). Không sửa file này.', kdf: 'PBKDF2-SHA256', iter: SM.iter, salt: SM.salt, z, iv: b64(iv), ct: b64(ct) });
+}
+async function unseal(text, key) {
+  const e = JSON.parse(text);
+  let bytes = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(e.iv) }, key || CK, unb64(e.ct)));
+  if (e.z) bytes = await pipeBytes(bytes, new DecompressionStream('gzip'));
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+/* ---- GitHub API ---- */
+async function gh(method, path, body, extra) {
+  const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 15000);
+  try {
+    return await fetch(/^https?:/.test(path) ? path : GH + path, {
+      method, cache: 'no-store', signal: ctl.signal,
+      headers: Object.assign({ Authorization: 'Bearer ' + SM.token, Accept: 'application/vnd.github+json' }, body ? { 'Content-Type': 'application/json' } : {}, extra || {}),
+      body: body ? JSON.stringify(body) : undefined
+    });
+  } finally { clearTimeout(tm); }
+}
+const verOf = j => (j.history && j.history[0] && j.history[0].version) || j.updated_at || '';
+async function fileText(j) {
+  const f = j.files && j.files[GIST_FILE];
+  if (!f) return null;
+  if (!f.truncated && typeof f.content === 'string') return f.content;
+  const r = await fetch(f.raw_url, { cache: 'no-store' });           // file > 1 MB: GitHub gives a raw link instead
+  if (!r.ok) throw new Error('raw ' + r.status);
+  return r.text();
+}
+async function docFrom(j) {
+  const t = await fileText(j);
+  if (!t) return emptyDoc();
+  const d = await unseal(t);
+  return d && typeof d === 'object' && d.pages ? d : emptyDoc();
+}
+class SyncErr extends Error { constructor(kind) { super(kind); this.kind = kind; } }
+function checkResp(r) {
+  if (r.status === 401) throw new SyncErr('auth');
+  if (r.status === 404) throw new SyncErr('gone');
+  if (r.status === 403 || r.status === 429) throw new SyncErr('limit');
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+}
+
+/* ---- sync loop ---- */
+function uiBusy() {
+  const ae = document.activeElement;
+  if (Date.now() - lastInputAt < 1200) return true;
+  if (M.open || DRAGB || DRAGT || DRAGP || DRAGF) return true;
+  if (LP && !LP.hidden && LP.classList.contains('editing')) return true;
+  if (ae && ae.classList && (ae.classList.contains('rename') || (ae.classList.contains('ttext') && !ae.textContent.trim()))) return true;
+  if (document.querySelector('.ovl')) return true;
+  return false;
+}
+function queueSync(delay = 3000) {
+  pending = true;
+  if (!configured() || !CK) return;
+  clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, delay);
+}
+async function syncNow(force) {
+  clearTimeout(syncTimer);
+  if (!configured() || !CK) return;
+  if (syncing) { syncTimer = setTimeout(syncNow, 1000); return; }
+  if (force !== true && uiBusy()) { syncTimer = setTimeout(syncNow, 1500); return; }
+  syncing = true;
+  const prevBase = { ...SM.base };
+  if (pending || !haveRemote) setSync('busy');
+  try {
+    const full = pending || !haveRemote;
+    let r = await gh('GET', '/gists/' + SM.gist, null, !full && SM.etag ? { 'If-None-Match': SM.etag } : null);
+    if (r.status === 304) { setSync('ok'); return; }
+    checkResp(r);
+    let etag = r.headers.get('ETag') || '', j = await r.json();
+    let rver = verOf(j);
+    if (!pending && haveRemote && rver === SM.ver) { SM.etag = etag; saveSM(); setSync('ok'); return; }
+    let remote = await docFrom(j);
+    pending = false;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      if (force !== true && uiBusy()) { pending = true; syncTimer = setTimeout(syncNow, 1500); setSync('ok'); return; }
+      if (!SM.ver && Object.keys(remote.pages).length) dropPristineSeed(S);    // new device joining: don't spread its welcome pages
+      const merged = mergeDocs(docOf(S), remote, prevBase);
+      if (canon(merged) !== canon(docOf(S))) applyMerged(merged);
+      Object.assign(SM.base, tsMap(remote)); Object.assign(prevBase, SM.base); saveSM();   // only what GitHub has shown us, never our own unsent edits
+      if (canon(merged) === canon(remote)) { finishSync(rver, etag, merged); return; }
+      const wait = lastWriteAt + WRITE_GAP - Date.now();
+      if (wait > 0) { pending = true; syncTimer = setTimeout(syncNow, wait + 50); setSync('ok'); return; }
+      lastWriteAt = Date.now();
+      const pr = await gh('PATCH', '/gists/' + SM.gist, { files: { [GIST_FILE]: { content: await seal(merged) } } });
+      checkResp(pr);
+      const pj = await pr.json(), hist = (pj.history || []).map(x => x.version), nver = hist[0] || verOf(pj);
+      /* someone else uploaded between our read and our write → their version is in the Gist history: merge it back in */
+      const at = hist.indexOf(rver), between = at > 1 ? hist.slice(1, at) : [];
+      if (!between.length) { finishSync(nver, '', merged); return; }
+      let acc = emptyDoc();
+      for (const v of between) {
+        const rr = await gh('GET', `/gists/${SM.gist}/${v}`);
+        if (rr.ok) acc = mergeDocs(acc, await docFrom(await rr.json()), {});
+      }
+      applyMerged(mergeDocs(docOf(S), acc, prevBase));
+      /* both our upload and theirs are now on GitHub → count them as seen, so the next round can't raise a second conflict copy */
+      [tsMap(merged), tsMap(acc)].forEach(m => { for (const id in m) SM.base[id] = Math.max(SM.base[id] || 0, m[id]); });
+      Object.assign(prevBase, SM.base); saveSM();
+      remote = merged; rver = nver; etag = '';
+      lastWriteAt = 0;
+    }
+    pending = true; setSync('ok');
+  } catch (err) {
+    pending = true;
+    if (err instanceof SyncErr) setSync(err.kind);
+    else if (err && err.name === 'OperationError') setSync('key');
+    else setSync('offline');
+  } finally {
+    syncing = false;
+    if (pending && ['ok', 'busy'].includes(syncState)) queueSync(1500);
+  }
+}
+function finishSync(ver, etag, doc) {
+  SM.ver = ver; SM.etag = etag; SM.last = Date.now(); SM.base = tsMap(doc); haveRemote = true;
+  saveSM(); setSync('ok');
+}
+/* Put merged data into the app without losing what the user is looking at / typing */
+function applyMerged(m) {
+  const act = S.active, viewSig = () => (S.active === TODAY ? taskSig() : canon(S.pages[S.active] || null)), before = viewSig();
+  const navSig = () => canon([S.order, S.folderOrder, Object.values(S.pages).map(p => [p.id, p.title, p.icon, p.folder]), S.folders]);
+  const navBefore = navSig();
+  SYNC_KEYS.forEach(k => { S[k] = m[k]; });
+  fix(S);
+  dirty = true; saveNow();
+  if (navSig() !== navBefore) renderNav();
+  if (S.active !== act || viewSig() !== before) refreshPage();
+  else if (S.active !== TODAY) setCrumb();
+  updateTodayNav();
+}
+function captureView() {
+  const v = { scroll: $('#scroll').scrollTop, lists: {}, caret: null };
+  if (BOARD) $$('.cards', BOARD).forEach(l => { v.lists[l.parentElement.dataset.col] = l.scrollTop; });
+  const ae = document.activeElement;
+  if (ae && $('#page').contains(ae) && ae.isContentEditable) {
+    const off = caretOffset(ae);
+    if (ae.classList.contains('ptitle')) v.caret = { k: 'title', off };
+    else if (ae.closest('.block')) v.caret = { k: 'block', id: ae.closest('.block').dataset.id, off };
+    else if (ae.closest('.card')) v.caret = { k: 'task', id: ae.closest('.card').dataset.id, off };
+  }
+  return v;
+}
+function restoreView(v) {
+  $('#scroll').scrollTop = v.scroll;
+  if (BOARD) $$('.cards', BOARD).forEach(l => { l.scrollTop = v.lists[l.parentElement.dataset.col] || 0; fadeOf(l); });
+  const c = v.caret; if (!c) return;
+  let el = null;
+  if (c.k === 'title') el = $('.ptitle');
+  else if (c.k === 'block') { const b = $(`.block[data-id="${c.id}"]`); el = b && bc(b); }
+  else { const cd = $(`.card[data-id="${c.id}"]`); el = cd && $('.ttext', cd); }
+  if (!el) return;
+  el.focus({ preventScroll: true });
+  const o = Math.min(c.off, el.textContent.length), r = rangeAt(el, o, o); r.collapse(true); setSel(r);
+}
+function refreshPage() { const v = captureView(); renderPage(); restoreView(v); }
+
+/* ---- status pill + menu ---- */
+const SYNC_LBL = { off: 'Bật đồng bộ', busy: 'Đang đồng bộ…', ok: 'Đã đồng bộ', offline: 'Ngoại tuyến', auth: 'Token lỗi', gone: 'Mất kết nối Gist', limit: 'GitHub tạm giới hạn', key: 'Sai mật khẩu' };
+function setSync(st) {
+  syncState = st;
+  const b = $('#syncBtn'); if (!b) return;
+  b.classList.add('on');
+  b.classList.remove('ok', 'busy', 'warn', 'err', 'off');
+  b.classList.add({ busy: 'busy', ok: 'ok', offline: 'warn', limit: 'warn', off: 'off' }[st] || 'err');
+  $('#syncLbl').textContent = SYNC_LBL[st] || '';
+  b.title = st === 'ok' && SM.last ? 'Đồng bộ lần cuối ' + fmt(SM.last)
+    : st === 'offline' ? 'Không có mạng. Vẫn dùng bình thường, sẽ tự đồng bộ khi có mạng.'
+    : st === 'off' ? 'Đồng bộ ghi chú giữa máy tính và điện thoại qua GitHub (miễn phí, mã hóa)' : SYNC_LBL[st];
+}
+function syncMenu() {
+  if (!configured() || ['auth', 'gone', 'key'].includes(syncState)) { showSetup(); return; }
+  openMenu($('#syncBtn').getBoundingClientRect(), [
+    { head: (syncState === 'offline' ? 'Ngoại tuyến · ' : '') + (SM.last ? 'Lần cuối ' + fmt(SM.last) : 'Chưa đồng bộ') + (SM.login ? ' · @' + SM.login : '') },
+    { label: 'Đồng bộ ngay', ic: IC.sync, a: 'now' },
+    { label: 'Dùng trên điện thoại / máy khác…', ic: IC.link, a: 'other' },
+    { label: 'Ngắt đồng bộ trên máy này', ic: IC.unlink, a: 'off', cls: 'danger' }
+  ], it => {
+    if (it.a === 'now') { pending = true; lastWriteAt = 0; syncNow(); }
+    else if (it.a === 'other') showOther();
+    else if (confirm('Ngắt đồng bộ trên máy này?\nDữ liệu trên máy và trên GitHub vẫn giữ nguyên, các máy khác vẫn đồng bộ bình thường.')) {
+      Object.assign(SM, { token: '', gist: '', key: '', salt: '', iter: 0, ver: '', etag: '', base: {}, last: 0, skipSetup: true });
+      CK = null; haveRemote = false; saveSM(); setSync('off');
+    }
+  }, 'sync');
+}
+function appUrl() {
+  if (location.protocol === 'https:') return location.origin + location.pathname.replace(/index\.html$/, '');
+  return SM.login ? `https://${SM.login.toLowerCase()}.github.io/notelite/` : '';
+}
+
+/* ---- dialogs ---- */
+function closeOvl() { const o = $('.ovl'); if (o) o.remove(); }
+function dialog(html) {
+  closeOvl();
+  const o = h('div', 'ovl'), d = h('div', 'dlg', html);
+  o.append(d); document.body.append(o);
+  o.addEventListener('mousedown', e => { if (e.target === o && !d.querySelector('input')) closeOvl(); });
+  return d;
+}
+function showAddHome() {
+  const d = dialog(`<div class="ic">📲</div><h3>Thêm NoteLite ra màn hình chính</h3>
+    <p>Để dùng như một app, kể cả khi không có mạng:</p>
+    <ol><li>Bấm nút <b>Chia sẻ</b> <span class="share-ic">${IC.share}</span> của Safari</li><li>Chọn <b>Thêm vào MH chính</b> → <b>Thêm</b></li><li>Mở NoteLite từ màn hình chính rồi bật đồng bộ</li></ol>
+    <div class="row"><button class="btn" data-a="here">Dùng tạm trong Safari</button></div>`);
+  $('[data-a=here]', d).onclick = () => { sessionStorage.setItem('nl.here', '1'); closeOvl(); if (!configured() && !SM.skipSetup) showSetup(); };
+}
+function showSetup() {
+  const msg = { auth: 'Token GitHub không còn dùng được (hết hạn hoặc đã bị xóa). Tạo token mới rồi nhập lại.', gone: 'Không tìm thấy Gist đồng bộ (có thể đã bị xóa). Kết nối lại để tạo mới từ dữ liệu trên máy này.', key: 'Mật khẩu đồng bộ đã đổi trên máy khác. Nhập lại mật khẩu mới.' }[syncState] || '';
+  const d = dialog(`<div class="ic">🔄</div><h3>Đồng bộ qua GitHub</h3>
+    <p>Miễn phí, chạy cả khi máy tính tắt. Ghi chú được <b>mã hóa ngay trên máy</b> bằng mật khẩu của bạn trước khi gửi lên, GitHub không đọc được.</p>
+    ${msg ? `<p class="warn-msg">${msg}</p>` : ''}
+    <label class="fld"><span>GitHub token <a href="${TOKEN_URL}" target="_blank" rel="noopener">Tạo token ↗</a></span>
+      <input id="ghTok" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ghp_…" value="${esc(SM.token)}"></label>
+    <label class="fld"><span>Mật khẩu đồng bộ</span>
+      <input id="ghPass" type="password" autocomplete="new-password" placeholder="Ít nhất 8 ký tự"></label>
+    <p class="hint">Dùng <b>cùng token và mật khẩu</b> trên mọi thiết bị. Quên mật khẩu thì không mở được bản trên GitHub (dữ liệu trên từng máy vẫn còn).</p>
+    <div class="err" id="ghErr"></div>
+    <div class="row"><button class="btn" data-a="later">Để sau</button><button class="btn primary" data-a="go">Bật đồng bộ</button></div>`);
+  const tok = $('#ghTok', d), pass = $('#ghPass', d), err = $('#ghErr', d), go = $('[data-a=go]', d);
+  setTimeout(() => (tok.value ? pass : tok).focus(), 60);
+  [tok, pass].forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') go.click(); }));
+  $('[data-a=later]', d).onclick = () => { if (!configured()) { SM.skipSetup = true; saveSM(); } closeOvl(); };
+  go.onclick = async () => {
+    const t = tok.value.trim(), p = pass.value;
+    if (!t) { err.textContent = 'Dán token GitHub vào ô trên.'; tok.focus(); return; }
+    if (p.length < 8) { err.textContent = 'Mật khẩu đồng bộ cần ít nhất 8 ký tự.'; pass.focus(); return; }
+    go.disabled = true; err.classList.remove('ok'); err.textContent = 'Đang kết nối GitHub…';
+    try { await connect(t, p, s => { err.textContent = s; }); closeOvl(); }
+    catch (e) { err.textContent = e.message || 'Không kết nối được. Kiểm tra mạng rồi thử lại.'; }
+    finally { go.disabled = false; }
+  };
+}
+function showOther() {
+  const url = appUrl();
+  const d = dialog(`<div class="ic">📱</div><h3>Dùng trên điện thoại / máy khác</h3>
+    <ol>${url ? `<li>Mở <b>${esc(url)}</b> bằng Safari trên iPhone, thêm ra màn hình chính.</li>` : '<li>Mở trang NoteLite của bạn (GitHub Pages) trên thiết bị kia.</li>'}
+    <li>Bấm <b>Bật đồng bộ</b>, dán token và nhập <b>cùng mật khẩu đồng bộ</b>.</li></ol>
+    <p class="hint">Mẹo: Mac và iPhone cùng Apple ID thì sao chép trên Mac rồi dán thẳng trên iPhone được.</p>
+    <div class="row">${url ? '<button class="btn" data-a="url">Sao chép địa chỉ</button>' : ''}<button class="btn" data-a="tok">Sao chép token</button><button class="btn primary" data-a="ok">Xong</button></div>`);
+  d.addEventListener('click', async e => {
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    if (a.dataset.a === 'ok') { closeOvl(); return; }
+    const ok = await copyText(a.dataset.a === 'url' ? url : SM.token);
+    a.textContent = ok ? 'Đã sao chép ✓' : 'Không sao chép được';
+  });
+}
+async function connect(token, pass, progress) {
+  if (!window.crypto || !crypto.subtle) throw new Error('Trình duyệt này không hỗ trợ mã hóa. Hãy dùng Chrome hoặc Safari bản mới.');
+  const old = { ...SM };
+  SM.token = token;
+  try {
+    let r = await gh('GET', '/user');
+    if (r.status === 401) throw new Error('Token không đúng hoặc đã hết hạn.');
+    if (!r.ok) throw new Error('GitHub trả về lỗi ' + r.status + '. Thử lại sau.');
+    const scopes = r.headers.get('X-OAuth-Scopes');
+    if (scopes != null && scopes !== '' && !scopes.split(/\s*,\s*/).includes('gist')) throw new Error('Token chưa có quyền "gist". Tạo lại token và tick ô gist.');
+    SM.login = (await r.json()).login || '';
+    progress('Đang tìm dữ liệu đồng bộ…');
+    let found = null;
+    for (let page = 1; page <= 10 && !found; page++) {
+      const lr = await gh('GET', `/gists?per_page=100&page=${page}`);
+      if (!lr.ok) throw new Error('Không đọc được danh sách Gist (' + lr.status + '). Token cần quyền gist.');
+      const list = await lr.json();
+      found = list.filter(g => g.files && g.files[GIST_FILE]).sort((a, b) => (b.updated_at > a.updated_at ? 1 : -1))[0] || null;
+      if (list.length < 100) break;
+    }
+    if (found) {
+      progress('Đang giải mã…');
+      const gr = await gh('GET', '/gists/' + found.id); checkResp(gr);
+      const gj = await gr.json(), env = JSON.parse(await fileText(gj));
+      const key = await deriveKey(pass, env.salt, env.iter);
+      try { await unseal(JSON.stringify(env), key); }
+      catch (_) { throw new Error('Sai mật khẩu đồng bộ. Dữ liệu trên GitHub đã được mã hóa bằng mật khẩu khác (mật khẩu bạn đặt lần đầu).'); }
+      CK = key;
+      Object.assign(SM, { gist: found.id, salt: env.salt, iter: env.iter, key: b64(await crypto.subtle.exportKey('raw', key)), ver: '', etag: '', base: {}, last: 0, skipSetup: false });
+      saveSM(); haveRemote = false; pending = true; lastWriteAt = 0;
+      progress('Đang gộp dữ liệu…');
+      await syncNow(true);
+      if (syncState !== 'ok') throw new Error('Kết nối được nhưng chưa đồng bộ xong. Kiểm tra mạng rồi bấm lại.');
+      toast('Đã bật đồng bộ ✓ Dữ liệu từ các máy khác đã được gộp vào.');
+    } else {
+      progress('Đang tạo nơi lưu trữ mã hóa trên GitHub…');
+      const salt = b64(crypto.getRandomValues(new Uint8Array(16)));
+      CK = await deriveKey(pass, salt, KDF_ITER);
+      Object.assign(SM, { salt, iter: KDF_ITER, key: b64(await crypto.subtle.exportKey('raw', CK)) });
+      const cr = await gh('POST', '/gists', { description: GIST_DESC, public: false, files: { [GIST_FILE]: { content: await seal(docOf(S)) } } });
+      if (!cr.ok) throw new Error('Không tạo được Gist (' + cr.status + '). Token cần quyền gist.');
+      const cj = await cr.json();
+      Object.assign(SM, { gist: cj.id, skipSetup: false });
+      finishSync(verOf(cj), '', docOf(S));
+      toast('Đã bật đồng bộ ✓ Mở NoteLite trên điện thoại và nhập cùng token + mật khẩu.');
+    }
+  } catch (e) {
+    if (!configured() || SM.gist !== old.gist || !CK) { Object.assign(SM, old); CK = SM.key ? await importKey(SM.key).catch(() => null) : null; }
+    throw e instanceof SyncErr ? new Error({ auth: 'Token không đúng hoặc đã hết hạn.', gone: 'Không tìm thấy Gist.', limit: 'GitHub đang tạm giới hạn, thử lại sau ít phút.' }[e.kind]) : e;
+  }
+}
+const importKey = k => crypto.subtle.importKey('raw', unb64(k), { name: 'AES-GCM' }, true, ['encrypt', 'decrypt']);
+
+/* ---- toast ---- */
+let toastT = null;
+function toast(msg, action, fn) {
+  const t = $('#toast'); t.innerHTML = ''; t.append(h('span', '', esc(msg)));
+  if (action) { const b = h('button', '', esc(action)); b.onclick = () => { t.classList.remove('show'); fn(); }; t.append(b); }
+  t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+async function initSync() {
+  $('#syncBtn').onclick = syncMenu;
+  if (WEB && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  document.addEventListener('input', () => { lastInputAt = Date.now(); }, true);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { saveNow(); if (pending && configured()) { lastWriteAt = 0; syncNow(true); } } else syncNow(); });   // app closed/switched away: upload right away
+  window.addEventListener('online', () => syncNow());
+  window.addEventListener('focus', () => syncNow());
+  setInterval(() => { if (!document.hidden) syncNow(); }, POLL_MS);
+  if (configured()) {
+    try { CK = await importKey(SM.key); setSync('busy'); syncNow(); }
+    catch (_) { setSync('key'); }
+  } else setSync('off');
+  if (IS_IOS && WEB && !STANDALONE && !sessionStorage.getItem('nl.here')) showAddHome();
+  else if (WEB && !configured() && !SM.skipSetup) showSetup();
+}
+
+/* ---------- Highlight today ----------
+   Picks tasks from every todo list into a checklist for the current day.
+   It never edits task text; ticking here moves the original task to the Done column of its own page. */
+const TODAY = '__today';
+const dayKey = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const DOW = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+function dayLabel(key) { const [y, m, d] = key.split('-').map(Number); return `${DOW[new Date(y, m - 1, d).getDay()]}, ${pad(d)}/${pad(m)}/${y}`; }
+const tkey = it => it.p + '/' + it.t;
+function findTask(pid, tid) {
+  const p = S.pages[pid]; if (!p || p.type !== 'board') return null;
+  const t = (p.tasks || []).find(x => x.id === tid);
+  return t ? { p, t } : null;
+}
+const todayList = () => (S.today && S.today.date === dayKey() ? S.today : null);
+function todayItems(td) {                      // tasks that still exist, in the chosen order
+  return (td ? td.items : []).map(it => { const f = findTask(it.p, it.t); return f ? { it, p: f.p, t: f.t } : null; }).filter(Boolean);
+}
+function setToday(items) { S.today = { date: dayKey(), items, updatedAt: now() }; save(); updateTodayNav(); }
+let shownDay = dayKey();
+function updateTodayNav() {
+  const el = $('#todayNav'); if (!el) return;
+  const xs = todayItems(todayList()), done = xs.filter(x => x.t.col === 'done').length;
+  el.classList.toggle('active', S.active === TODAY);
+  $('.f-cnt', el).textContent = xs.length ? `${done}/${xs.length}` : '';
+  el.classList.toggle('all-done', xs.length > 0 && done === xs.length);
+}
+function openToday() {
+  S.active = TODAY; save(); renderNav(); renderPage();
+  if (innerWidth <= 760) setSide(false);
+}
+/* boards in the same order as the sidebar */
+function boardsInOrder() {
+  const ids = [...S.folderOrder.flatMap(fid => S.order.filter(id => S.pages[id].folder === fid)), ...S.order.filter(id => !S.pages[id].folder)];
+  return ids.map(id => S.pages[id]).filter(p => p && p.type === 'board');
+}
+function taskSig() {   // what the Today screen depends on (used to refresh after sync)
+  return canon([S.today, boardsInOrder().map(p => [p.id, p.title, p.icon, (p.tasks || []).map(t => [t.id, t.text, t.col])])]);
+}
+
+function renderToday(el) {
+  shownDay = dayKey();
+  el.className = 'page';
+  $('#crumb').innerHTML = '<span>☀️</span><span>Highlight today</span>';
+  document.title = 'Highlight today — NoteLite';
+  const td = todayList(), xs = todayItems(td), done = xs.filter(x => x.t.col === 'done').length;
+  const pct = xs.length ? Math.round(done / xs.length * 100) : 0;
+  const head = h('div', 'page-head', `<div class="picon static">☀️</div><div class="ptitle static">Highlight today</div>
+    <div class="pmeta"><span>${dayLabel(shownDay)}</span>${xs.length ? `<span>·</span><span class="prog"><i style="width:${pct}%"></i></span><span>${done}/${xs.length} xong</span>` : ''}</div>`);
+  el.append(head);
+  if (!xs.length) {
+    el.append(h('div', 'today-intro', '<h3>Hôm nay bạn sẽ làm gì?</h3><p>Chọn việc từ các todo list của bạn. Tick xong ở đây, task sẽ tự chuyển sang cột <b>Done</b> trong trang của nó.</p>'));
+    el.append(buildPicker(items => { setToday(items); renderPage(); }, 'Tạo danh sách hôm nay'));
+    return;
+  }
+  const list = h('div', 'today-list');
+  [...xs.filter(x => x.t.col !== 'done'), ...xs.filter(x => x.t.col === 'done')].forEach(x => list.append(todayRow(x)));
+  el.append(list);
+  if (done === xs.length) el.append(h('div', 'today-done', '🎉 Xong hết việc hôm nay!'));
+  const add = h('button', 'add-card today-add', IC.plus + '<span>Thêm việc từ các todo list</span>');
+  add.onclick = openPickerModal;
+  el.append(add);
+}
+function todayRow({ it, p, t }) {
+  const isDone = t.col === 'done';
+  const r = h('div', 'trow' + (isDone ? ' is-done' : '')); r.dataset.key = tkey(it);
+  const chk = h('button', 'tchk' + (isDone ? ' on' : ''), IC.check);
+  chk.title = isDone ? 'Bỏ tick → đưa task về cột To-do' : 'Tick → task chuyển sang cột Done';
+  const body = h('div', 'trow-body');
+  const tx = h('div', 'trow-text'); tx.textContent = t.text; linkifyEl(tx);
+  const src = h('button', 'trow-src', `<span>${esc(p.icon || '✅')}</span><span class="nm">${esc(p.title || 'Không có tiêu đề')}</span><span class="dot">·</span><span class="cl cl-${t.col}">${colName(t.col)}</span>`);
+  src.title = 'Mở trang chứa task này';
+  body.append(tx, src);
+  const rm = h('button', 'tdel trow-rm', IC.x); rm.title = 'Bỏ khỏi danh sách hôm nay (task vẫn giữ nguyên)';
+  r.append(chk, body, rm);
+  chk.onclick = () => {
+    if (r.dataset.moving) return; r.dataset.moving = '1';
+    const to = isDone ? 'todo' : 'done';
+    chk.classList.toggle('on', !isDone); r.classList.toggle('is-done', !isDone);
+    setTimeout(() => {
+      const first = p.tasks.find(x => x.col === to && x.id !== t.id);
+      moveTask(p, t, to, first ? first.id : null); touch(p);
+      renderPage(); updateTodayNav();
+      toast(to === 'done' ? `Đã chuyển sang Done trong “${p.title || 'Không có tiêu đề'}”` : `Đã đưa về To-do trong “${p.title || 'Không có tiêu đề'}”`);
+    }, 260);
+  };
+  src.onclick = () => openPage(p.id);
+  tx.addEventListener('click', e => { const a = e.target.closest('a[href]'); if (a) { e.preventDefault(); openUrl(a.href); } });
+  rm.onclick = () => {
+    const td = todayList(); if (!td) return;
+    setToday(td.items.filter(i => tkey(i) !== tkey(it))); renderPage();
+  };
+  return r;
+}
+
+/* ---- task picker (inline when the day is empty, in a dialog when adding more) ---- */
+function buildPicker(onDone, cta, onCancel) {
+  const td = todayList(), already = new Set((td ? td.items : []).map(tkey));
+  const sel = new Map();                          // key → {p, t}, in the order the user picks them
+  const wrap = h('div', 'picker');
+  const q = h('input', 'pk-q'); q.placeholder = 'Tìm task…'; q.type = 'search'; q.autocomplete = 'off';
+  wrap.append(q);
+  /* unfinished tasks from the last day that had a list */
+  const old = S.today && S.today.date !== dayKey() ? todayItems(S.today).filter(x => x.t.col !== 'done' && !already.has(tkey(x.it))) : [];
+  if (old.length) {
+    const carry = h('button', 'pk-carry', `${IC.sync}<span>Chọn lại <b>${old.length}</b> việc chưa xong từ ${dayLabel(S.today.date)}</span>`);
+    carry.onclick = () => { old.forEach(x => sel.set(tkey(x.it), x.it)); carry.remove(); draw(); };
+    wrap.append(carry);
+  }
+  const list = h('div', 'pk-list');
+  const foot = h('div', 'pk-foot');
+  const cnt = h('span', 'pk-cnt');
+  const go = h('button', 'btn primary', esc(cta));
+  if (onCancel) { const c = h('button', 'btn', 'Hủy'); c.onclick = onCancel; foot.append(cnt, c, go); } else foot.append(cnt, go);
+  wrap.append(list, foot);
+  function draw() {
+    list.innerHTML = '';
+    const qq = norm(q.value.trim());
+    let shown = 0;
+    boardsInOrder().forEach(p => {
+      const tasks = [...p.tasks.filter(t => t.col === 'todo'), ...p.tasks.filter(t => t.col === 'backlog')]
+        .filter(t => t.text.trim() && !already.has(p.id + '/' + t.id) && (!qq || norm(t.text + ' ' + p.title).includes(qq)));
+      if (!tasks.length) return;
+      const g = h('div', 'pk-g', `<span>${esc(p.icon || '✅')}</span><span class="nm">${esc(p.title || 'Không có tiêu đề')}</span><span class="n">${tasks.length}</span>`);
+      list.append(g);
+      tasks.forEach(t => {
+        const k = p.id + '/' + t.id, on = sel.has(k);
+        const row = h('button', 'pk-row' + (on ? ' on' : ''), `<span class="tchk${on ? ' on' : ''}">${IC.check}</span><span class="pk-tx">${esc(t.text)}</span><span class="cl cl-${t.col}">${colName(t.col)}</span>`);
+        row.onclick = () => {
+          if (sel.has(k)) sel.delete(k); else sel.set(k, { p: p.id, t: t.id });
+          const now_ = sel.has(k); row.classList.toggle('on', now_); $('.tchk', row).classList.toggle('on', now_); count();
+        };
+        list.append(row); shown++;
+      });
+    });
+    if (!shown) list.append(h('div', 'pk-empty', qq ? 'Không có task nào khớp.' : 'Chưa có task nào đang chờ trong các todo list (Backlog / To-do).'));
+    count();
+  }
+  function count() { cnt.textContent = sel.size ? `Đã chọn ${sel.size}` : 'Chưa chọn việc nào'; go.disabled = !sel.size; }
+  q.addEventListener('input', draw);
+  go.onclick = () => { const td2 = todayList(); onDone([...(td2 ? td2.items : []), ...sel.values()]); };
+  draw();
+  return wrap;
+}
+function openPickerModal() {
+  const d = dialog('<h3>Thêm việc cho hôm nay</h3>');
+  d.classList.add('dlg-picker');
+  d.append(buildPicker(items => { closeOvl(); setToday(items); renderPage(); }, 'Thêm vào hôm nay', closeOvl));
+  d.addEventListener('keydown', e => { if (e.key === 'Escape') closeOvl(); });
+  setTimeout(() => { const q = $('.pk-q', d); if (q && matchMedia('(pointer:fine)').matches) q.focus(); }, 50);
+}
+
+/* ---------- Shell events ---------- */
+function applyTheme() {
+  const t = S.theme || 'auto';
+  if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.dataset.theme = t;
+  $('#themeLbl').textContent = { auto: 'Tự động', light: 'Sáng', dark: 'Tối' }[t];
+}
+$('#themeBtn').onclick = () => { S.theme = { auto: 'light', light: 'dark', dark: 'auto' }[S.theme || 'auto']; applyTheme(); save(); };
+let sideOpen = true;
+function setSide(v) { sideOpen = v; $('#app').classList.toggle('side-closed', !v); if (innerWidth > 760) { S.side = v; save(); } }
+$('#closeSide').onclick = () => setSide(false);
+$('#openSide').onclick = () => setSide(true);
+$('#scrim').onclick = () => setSide(false);
+$('#newNote').onclick = () => createPage('note');
+$('#newBoard').onclick = () => createPage('board');
+$('#newFolder').onclick = () => createFolder();
+$('#todayNav').onclick = () => { if (S.active !== TODAY) openToday(); else if (innerWidth <= 760) setSide(false); };
+setInterval(() => { if (dayKey() !== shownDay) { shownDay = dayKey(); updateTodayNav(); if (S.active === TODAY) renderPage(); } }, 30000);   // midnight → new day
+$('#q').addEventListener('input', renderNav);
+const NAV = $('#nav');
+NAV.addEventListener('click', e => {
+  if (e.target.closest('input')) return;
+  const fr = e.target.closest('.nav-item.folder');
+  if (fr) {
+    const fid = fr.dataset.fid, act = e.target.closest('.nav-act');
+    if (act) {
+      e.stopPropagation();
+      const r = act.getBoundingClientRect();
+      if (act.dataset.act === 'add') openMenu(r, [{ label: 'Ghi chú mới', ic: IC.doc, t: 'note' }, { label: 'Todo list mới', ic: IC.board, t: 'board' }], it => createPage(it.t, fid), 'folder');
+      else openMenu(r, [
+        { label: 'Đổi tên', ic: IC.edit, a: 'ren' },
+        { label: 'Di chuyển lên', ic: IC.mvUp, a: 'up' },
+        { label: 'Di chuyển xuống', ic: IC.mvDown, a: 'down' },
+        { label: 'Ghi chú mới trong thư mục', ic: IC.doc, a: 'note' },
+        { label: 'Todo list mới trong thư mục', ic: IC.board, a: 'board' },
+        { label: 'Xóa thư mục', ic: IC.trash, a: 'del', cls: 'danger' }
+      ], it => { if (it.a === 'ren') startRename(fid); else if (it.a === 'del') deleteFolder(fid); else if (it.a === 'up' || it.a === 'down') stepFolder(fid, it.a === 'up' ? -1 : 1); else createPage(it.a, fid); }, 'folder');
+      return;
+    }
+    const f = S.folders[fid]; f.open = !f.open; save(); renderNav(); return;
+  }
+  const del = e.target.closest('.nav-del'), it = e.target.closest('.nav-item[data-id]');
+  if (!it) return;
+  if (del) { e.stopPropagation(); deletePage(it.dataset.id); return; }
+  if (it.dataset.id !== S.active) openPage(it.dataset.id);
+  else if (innerWidth <= 760) setSide(false);
+});
+NAV.addEventListener('dblclick', e => {
+  const fr = e.target.closest('.nav-item.folder');
+  if (fr && !e.target.closest('.nav-act,input')) startRename(fr.dataset.fid);
+});
+/* sidebar drag & drop: reorder pages and folders, move pages between folders */
+let DRAGP = null, DRAGF = null, NAVDROP = null;
+function clearNavDrop() { $$('.drop-in,.drop-before,.drop-after', NAV).forEach(x => x.classList.remove('drop-in', 'drop-before', 'drop-after')); NAV.classList.remove('drop-root'); }
+const folderRowEl = fid => $(`.nav-item.folder[data-fid="${fid}"]`, NAV);
+function folderTail(fid) {                     // last visible row of a folder block (for an "after" line)
+  const box = $(`.f-children[data-fid="${fid}"]`, NAV);
+  return (box && box.lastElementChild) || folderRowEl(fid);
+}
+function navDropAt(e) {
+  const el = e.target.nodeType === 1 ? e.target : e.target.parentElement;
+  const row = el && el.closest('.nav-item, .nav-empty');
+  if (DRAGF) {
+    const blk = el && el.closest('.nav-item.folder, .f-children');
+    if (blk) {
+      const fid = blk.dataset.fid, fr = folderRowEl(fid), r = fr.getBoundingClientRect();
+      const before = blk === fr && e.clientY < r.top + r.height / 2;
+      return { kind: 'folder', fid, before, el: before ? fr : folderTail(fid) };
+    }
+    const last = S.folderOrder[S.folderOrder.length - 1];
+    return last ? { kind: 'folder', fid: last, before: false, el: folderTail(last) } : null;
+  }
+  if (!DRAGP) return null;
+  if (row && row.dataset.id) {
+    const r = row.getBoundingClientRect(), before = e.clientY < r.top + r.height / 2;
+    return { kind: 'page', ref: row.dataset.id, fid: S.pages[row.dataset.id].folder || null, before, el: row };
+  }
+  if (row && row.classList.contains('folder')) return { kind: 'into', fid: row.dataset.fid, el: row };
+  const box = el && el.closest('.f-children');
+  if (box) return { kind: 'into', fid: box.dataset.fid, el: folderRowEl(box.dataset.fid) };
+  return { kind: 'root' };
+}
+NAV.addEventListener('dragstart', e => {
+  const it = e.target.nodeType === 1 && e.target.closest('.nav-item'); if (!it) return;
+  if (it.dataset.id) DRAGP = it.dataset.id;
+  else if (it.dataset.fid && it.classList.contains('folder')) DRAGF = it.dataset.fid;
+  else return;
+  e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', '');
+  requestAnimationFrame(() => {
+    it.classList.add('dragging');
+    if (DRAGF) { const box = $(`.f-children[data-fid="${DRAGF}"]`, NAV); box && box.classList.add('dragging'); }
+  });
+});
+NAV.addEventListener('dragover', e => {
+  if (!DRAGP && !DRAGF) return;
+  e.preventDefault(); clearNavDrop();
+  const d = NAVDROP = navDropAt(e);
+  if (!d) return;
+  if (d.kind === 'into') d.el.classList.add('drop-in');
+  else if (d.kind === 'root') NAV.classList.add('drop-root');
+  else if (d.el && !(d.kind === 'page' && d.ref === DRAGP) && !(d.kind === 'folder' && d.fid === DRAGF)) d.el.classList.add(d.before ? 'drop-before' : 'drop-after');
+});
+NAV.addEventListener('dragleave', e => { if (!NAV.contains(e.relatedTarget)) { clearNavDrop(); NAVDROP = null; } });
+NAV.addEventListener('drop', e => {
+  if (!DRAGP && !DRAGF) return;
+  e.preventDefault();
+  const d = navDropAt(e), pid = DRAGP, fid = DRAGF;
+  DRAGP = DRAGF = NAVDROP = null; clearNavDrop();
+  if (!d) { renderNav(); return; }
+  if (fid) placeFolder(fid, d.fid, d.before);
+  else if (d.kind === 'page') placePage(pid, d.fid, d.ref, d.before);
+  else if (d.kind === 'into') placePage(pid, d.fid, null);
+  else placePage(pid, null, null);
+});
+NAV.addEventListener('dragend', () => { DRAGP = DRAGF = NAVDROP = null; clearNavDrop(); $$('.dragging', NAV).forEach(x => x.classList.remove('dragging')); });
+document.addEventListener('keydown', e => {
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && e.key === '\\') { e.preventDefault(); setSide(!sideOpen); }
+  else if (mod && (e.key === 's' || e.key === 'S')) { e.preventDefault(); dirty = true; saveNow(); }
+});
+window.addEventListener('beforeunload', saveNow);
+let fitT = null;
+window.addEventListener('resize', () => { clearTimeout(fitT); fitT = setTimeout(fitBoard, 100); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); });
+window.addEventListener('storage', e => {
+  if (e.key !== KEY || !e.newValue) return;
+  try { const a = S.active; S = fix(JSON.parse(e.newValue)); if (S.pages[a]) S.active = a; render(); } catch (_) {}
+});
+
+/* ---------- Init ---------- */
+load();
+sideOpen = innerWidth > 760 ? S.side !== false : false;
+$('#app').classList.toggle('side-closed', !sideOpen);
+render();
+setStatus('Đã lưu');
+initSync();
+})();
+</script>
+</body>
+</html>
