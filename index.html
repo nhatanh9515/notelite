@@ -157,6 +157,23 @@ svg{width:16px;height:16px;flex:none;display:block}
 .block[data-type=code] .bc{font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--codebg);padding:16px 20px;border-radius:6px;margin:4px 0;tab-size:2}
 .block[data-type=code] .grip{top:17px}
 .block[data-type=divider]{padding:6px 0}
+.block[data-type=image]{margin:6px 0;outline:none}
+.img-box{position:relative;width:100%;border-radius:6px;overflow:hidden;background:var(--hov);cursor:zoom-in;min-height:60px}
+.block.ready .img-box{background:none;min-height:0}
+.img-box img{display:block;width:100%;height:auto;border-radius:6px}
+.block.loading .img-box img,.block.missing .img-box img{display:none}
+.img-msg{display:none;position:absolute;inset:0;align-items:center;justify-content:center;padding:10px;text-align:center;font-size:13px;color:var(--t3)}
+.block.loading .img-msg,.block.missing .img-msg{display:flex}
+.block.loading .img-box{animation:pulse 1.2s infinite}
+.block[data-type=image]:focus .img-box{box-shadow:0 0 0 3px rgba(35,131,226,.55)}
+.block[data-type=image] .grip{top:4px}
+.editor.drop-files{box-shadow:inset 0 0 0 2px rgba(35,131,226,.35);border-radius:8px}
+.lightbox{position:fixed;inset:0;z-index:95;background:rgba(10,10,10,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px 16px calc(16px + env(safe-area-inset-bottom))}
+.lightbox img{max-width:100%;max-height:calc(100% - 64px);object-fit:contain;border-radius:6px;cursor:zoom-out}
+.lb-bar{display:flex;gap:8px}
+.lb-bar button{display:flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:8px;background:rgba(255,255,255,.12);color:#fff;font-size:14px}
+.lb-bar button:hover{background:rgba(255,255,255,.2)}
+.lb-bar button.danger:hover{background:rgba(235,87,87,.5)}
 .block[data-type=divider] .grip{top:1px}
 .hr{flex:1;height:1px;background:var(--bd);margin:6px 0}
 .bc code{background:var(--icode);color:var(--icodec);border-radius:4px;padding:.15em .35em;font:85% ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
@@ -542,6 +559,7 @@ function seed() {
       b('bullet', 'Gõ <code>- </code> tạo danh sách, <code>1. </code> đánh số, <code>[] </code> tạo ô tick'),
       b('bullet', 'Gõ <code>&gt; </code> trích dẫn, <code>```</code> khối code, <code>---</code> đường kẻ'),
       b('bullet', 'Bôi đen chữ để <b>in đậm</b>, <i>nghiêng</i>, <mark>highlight</mark>, chèn link'),
+      b('bullet', 'Dán ảnh (⌘V / Ctrl+V), kéo thả file ảnh, hoặc gõ <code>/ảnh</code> để chèn ảnh'),
       b('bullet', 'Rê chuột vào đầu dòng, kéo biểu tượng ⋮⋮ để sắp xếp · bấm vào để xóa/đổi loại'),
       b('todo', 'Thử tick vào ô này'),
       b('todo', 'Việc đã xong trông như thế này', true),
@@ -882,7 +900,8 @@ const MENU = [
   { t: 'todo', label: 'Việc cần làm', ic: '☑', desc: 'Ô tick theo dõi việc', k: 'todo checkbox viec can lam task check' },
   { t: 'quote', label: 'Trích dẫn', ic: '❝', desc: 'Làm nổi bật một câu', k: 'quote trich dan blockquote' },
   { t: 'code', label: 'Code', ic: '</>', desc: 'Khối code', k: 'code ma' },
-  { t: 'divider', label: 'Đường kẻ', ic: '—', desc: 'Ngăn cách các phần', k: 'divider duong ke hr line ngan cach' }
+  { t: 'divider', label: 'Đường kẻ', ic: '—', desc: 'Ngăn cách các phần', k: 'divider duong ke hr line ngan cach' },
+  { t: 'image', label: 'Ảnh', ic: '🖼', desc: 'Chọn ảnh từ máy / thư viện ảnh', k: 'image anh hinh photo picture img' }
 ];
 const bc = w => w.querySelector('.bc');
 function blockEl(b) {
@@ -890,6 +909,7 @@ function blockEl(b) {
   const g = h('div', 'grip', IC.grip); g.draggable = true; g.title = 'Kéo để di chuyển · Bấm để mở menu';
   w.append(g);
   if (b.type === 'divider') { w.append(h('div', 'hr')); return w; }
+  if (b.type === 'image') { imageBlockBody(w, b); return w; }
   if (b.type === 'bullet' || b.type === 'number') w.append(h('div', 'pre'));
   if (b.type === 'todo') { w.append(h('div', 'chk' + (b.checked ? ' on' : ''), IC.check)); if (b.checked) w.classList.add('checked'); }
   const c = h('div', 'bc'); c.contentEditable = 'true'; c.spellcheck = false; c.dataset.ph = PH[w.dataset.type] || PH.p;
@@ -904,10 +924,19 @@ function setType(w, type, checked = false) {
   const nb = blockEl({ id: w.dataset.id, type, html: type === 'divider' || !c ? '' : c.innerHTML, checked });
   w.replaceWith(nb); return nb;
 }
-const ser = w => ({ id: w.dataset.id, type: w.dataset.type, html: w.dataset.type === 'divider' ? '' : bc(w).innerHTML, checked: w.classList.contains('checked') });
+const ser = w => { const t = w.dataset.type, o = { id: w.dataset.id, type: t, html: bc(w) ? bc(w).innerHTML : '', checked: w.classList.contains('checked') }; if (t === 'image') o.img = w.dataset.img || ''; return o; };
 function syncNote() {
   const p = cur(); if (!p || p.type !== 'note' || !ED) return;
   p.blocks = $$(':scope > .block', ED).map(ser); touch(p);
+}
+function onImgKey(e) {
+  const w = e.target; if (!w.classList || !w.classList.contains('block') || w.dataset.type !== 'image') return;
+  const k = e.key;
+  if (k === 'Backspace' || k === 'Delete') { e.preventDefault(); removeImageBlock(w); }
+  else if (k === 'Enter') { e.preventDefault(); const nb = newBlock('p'); w.after(nb); focusStart(bc(nb)); syncNote(); }
+  else if (k === 'ArrowUp' || k === 'ArrowLeft') { const p = sibEd(w, -1); if (p) { e.preventDefault(); focusEnd(p); } }
+  else if (k === 'ArrowDown' || k === 'ArrowRight') { const n = sibEd(w, 1); if (n) { e.preventDefault(); focusStart(n); } }
+  else if (k === ' ') { e.preventDefault(); openLightbox(w); }
 }
 function sibEd(w, dir) {
   let s = dir < 0 ? w.previousElementSibling : w.nextElementSibling;
@@ -966,12 +995,14 @@ function onKey(e) {
     const prev = w.previousElementSibling; if (!prev) return;
     e.preventDefault();
     if (prev.dataset.type === 'divider') { prev.remove(); syncNote(); return; }
+    if (prev.dataset.type === 'image') { if (!c.textContent) w.remove(); prev.focus(); syncNote(); return; }
     mergeInto(bc(prev), c); w.remove(); syncNote(); return;
   }
   if (e.key === 'Delete' && atEnd(c)) {
     const next = w.nextElementSibling; if (!next) return;
     e.preventDefault();
     if (next.dataset.type === 'divider') { next.remove(); syncNote(); return; }
+    if (next.dataset.type === 'image') { next.focus(); return; }
     mergeInto(c, bc(next)); next.remove(); syncNote(); return;
   }
   if (e.key === 'ArrowUp' && !e.shiftKey && !mod) {
@@ -1043,12 +1074,19 @@ function parseLine(line) {
   for (const [re, t] of m) { const r = line.match(re); if (r) return { type: t, text: r[1], checked: t === 'todo' && /^\[x\]/i.test(line) }; }
   return { type: 'p', text: line };
 }
+function clipImages(dt) {
+  const out = [...(dt.files || [])].filter(f => /^image\//.test(f.type));
+  if (!out.length) [...(dt.items || [])].forEach(it => { if (it.kind === 'file' && /^image\//.test(it.type)) { const f = it.getAsFile(); f && out.push(f); } });
+  return out;
+}
 function onPaste(e) {
   const c = e.target.closest && e.target.closest('.bc'); if (!c) return;
   e.preventDefault();
   const text = (e.clipboardData.getData('text/plain') || '').replace(/\r\n?/g, '\n');
-  if (!text) return;
   const w = c.parentElement;
+  const imgs = text.trim() ? [] : clipImages(e.clipboardData);          // plain text wins (e.g. cells copied from Excel also carry a picture)
+  if (imgs.length) { insertImages(imgs, w, 'replace'); return; }
+  if (!text) return;
   if (w.dataset.type === 'code') { document.execCommand('insertText', false, text); syncNote(); return; }
   if (!text.includes('\n')) {
     const t = text.trim(), sel = getSelection();
@@ -1080,6 +1118,7 @@ function blockAtY(ed, y) {
 function endDragB(ed) { if (DRAGB) DRAGB.classList.remove('dragging'); DRAGB = null; clearDrop(ed); }
 function bindEditor(ed) {
   ed.addEventListener('keydown', onKey);
+  ed.addEventListener('keydown', onImgKey);
   ed.addEventListener('input', onInput);
   ed.addEventListener('paste', onPaste);
   ed.addEventListener('click', e => {
@@ -1087,6 +1126,8 @@ function bindEditor(ed) {
     if (chk) { const w = chk.parentElement; w.classList.toggle('checked'); chk.classList.toggle('on'); syncNote(); return; }
     const g = e.target.closest('.grip');
     if (g) { openBlockMenu(g.parentElement, g); return; }
+    const ib = e.target.closest('.block[data-type=image]');
+    if (ib && e.target.closest('.img-box')) { if (ib.classList.contains('ready')) openLightbox(ib); else if (ib.classList.contains('missing')) showImg(ib); return; }
     const a = e.target.closest('.bc a[href]');
     if (a) { if (e.ctrlKey || e.metaKey) { e.preventDefault(); openUrl(a.href); } else showLP(a, true); }
   });
@@ -1108,12 +1149,28 @@ function bindEditor(ed) {
     try { e.dataTransfer.setDragImage(DRAGB, 20, 14); } catch (_) {}
     setTimeout(() => DRAGB && DRAGB.classList.add('dragging'));
   });
+  const hasFiles = e => e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files');
   ed.addEventListener('dragover', e => {
+    if (!DRAGB && hasFiles(e)) {
+      e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; clearDrop(ed); ed.classList.add('drop-files');
+      const t = blockAtY(ed, e.clientY); if (t) { const r = t.getBoundingClientRect(); t.classList.add(e.clientY < r.top + r.height / 2 ? 'drop-before' : 'drop-after'); }
+      return;
+    }
     if (!DRAGB) return; e.preventDefault(); clearDrop(ed);
     const t = blockAtY(ed, e.clientY); if (!t || t === DRAGB) return;
     const r = t.getBoundingClientRect(); t.classList.add(e.clientY < r.top + r.height / 2 ? 'drop-before' : 'drop-after');
   });
+  ed.addEventListener('dragleave', e => { if (!ed.contains(e.relatedTarget)) { ed.classList.remove('drop-files'); if (!DRAGB) clearDrop(ed); } });
   ed.addEventListener('drop', e => {
+    if (!DRAGB && hasFiles(e)) {
+      e.preventDefault(); ed.classList.remove('drop-files');
+      const t = $('.drop-before,.drop-after', ed), before = t && t.classList.contains('drop-before'); clearDrop(ed);
+      const files = [...e.dataTransfer.files].filter(f => /^image\//.test(f.type));
+      if (!files.length) { toast('Chỉ kéo thả được file ảnh vào ghi chú.'); return; }
+      const ref = t || ED.lastElementChild;
+      insertImages(files, ref, isEmptyText(ref) ? 'replace' : before ? 'before' : 'after');
+      return;
+    }
     if (!DRAGB) return; e.preventDefault();
     const t = $('.drop-before,.drop-after', ed);
     if (t && t !== DRAGB) t.classList.contains('drop-before') ? t.before(DRAGB) : t.after(DRAGB);
@@ -1122,11 +1179,25 @@ function bindEditor(ed) {
   ed.addEventListener('dragend', () => endDragB(ed));
 }
 function openBlockMenu(w, g) {
+  if (w.dataset.type === 'image') {
+    openMenu(g.getBoundingClientRect(), [
+      { label: 'Xem ảnh lớn', ic: IC.ext, act: 'view' },
+      { label: 'Tải ảnh xuống', ic: IC.down, act: 'dl' },
+      { label: 'Nhân bản', ic: IC.copy, act: 'dup' },
+      { label: 'Xóa', ic: IC.trash, act: 'del', cls: 'danger' }
+    ], it => {
+      if (it.act === 'view') openLightbox(w);
+      else if (it.act === 'dl') downloadImageFile(w.dataset.img);
+      else if (it.act === 'dup') { w.after(blockEl({ ...ser(w), id: uid() })); syncNote(); }
+      else removeImageBlock(w);
+    }, 'block');
+    return;
+  }
   const items = [
     { label: 'Xóa', ic: IC.trash, act: 'del', cls: 'danger' },
     { label: 'Nhân bản', ic: IC.copy, act: 'dup' },
     { head: 'Chuyển thành' },
-    ...MENU.filter(m => m.t !== 'divider' && m.t !== w.dataset.type).map(m => ({ label: m.label, ic: esc(m.ic), act: 'type', t: m.t }))
+    ...MENU.filter(m => m.t !== 'divider' && m.t !== 'image' && m.t !== w.dataset.type).map(m => ({ label: m.label, ic: esc(m.ic), act: 'type', t: m.t }))
   ];
   openMenu(g.getBoundingClientRect(), items, it => {
     if (it.act === 'del') { w.remove(); if (!ED.children.length) ED.append(newBlock('p')); }
@@ -1199,7 +1270,10 @@ function updateSlash() {
   const q = norm(txt.slice(start + 1, off));
   if (q.length > 24 || /^\s/.test(q)) { closeMenu(); return; }
   const words = q.split(/\s+/).filter(Boolean);
-  M.items = MENU.filter(m => words.every(wd => norm(m.label + ' ' + m.k).includes(wd)));
+  /* best matches first: label starts with the query, then a label word does, then a keyword does */
+  const rank = m => { const L = norm(m.label), K = norm(m.k).split(' '), q0 = words.join(' ');
+    return L.startsWith(q0) ? 0 : L.split(' ').some(x => x.startsWith(words[0] || '')) ? 1 : K.some(x => x.startsWith(words[0] || '')) ? 2 : 3; };
+  M.items = MENU.filter(m => words.every(wd => norm(m.label + ' ' + m.k).includes(wd))).map((m, i) => [rank(m), i, m]).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map(x => x[2]);
   M.idx = 0;
   if (!M.items.length && q.length > 3) { closeMenu(); return; }
   drawMenu(); placePop(MENU_EL, caretRect(c));
@@ -1209,6 +1283,7 @@ function applySlash(s, t) {
   const off = Math.max(caretOffset(c), start + 1);
   rangeAt(c, start, off).deleteContents(); tidy(c);
   const w = c.parentElement;
+  if (t === 'image') { syncNote(); pickImageFiles(fs => insertImages(fs, w, c.textContent ? 'after' : 'replace')); return; }
   if (!c.textContent) {
     if (t === 'divider') { const d = setType(w, 'divider'); const nb = newBlock('p'); d.after(nb); focusStart(bc(nb)); }
     else focusStart(bc(setType(w, t)));
@@ -1573,7 +1648,7 @@ function pageToMd(p) {
     p.blocks.forEach(b => {
       const t = htmlToMd(b.html);
       n = b.type === 'number' ? n + 1 : 0;
-      out += ({ h1: `# ${t}`, h2: `## ${t}`, h3: `### ${t}`, bullet: `- ${t}`, number: `${n}. ${t}`, todo: `- [${b.checked ? 'x' : ' '}] ${t}`, quote: `> ${t}`, code: '```\n' + t + '\n```', divider: '---' }[b.type] ?? t) + '\n\n';
+      out += ({ h1: `# ${t}`, h2: `## ${t}`, h3: `### ${t}`, bullet: `- ${t}`, number: `${n}. ${t}`, todo: `- [${b.checked ? 'x' : ' '}] ${t}`, quote: `> ${t}`, code: '```\n' + t + '\n```', divider: '---', image: '![Ảnh](notelite-image)' }[b.type] ?? t) + '\n\n';
     });
   } else {
     COLS.forEach(col => {
@@ -1584,7 +1659,7 @@ function pageToMd(p) {
   }
   return out.replace(/\n{3,}/g, '\n\n');
 }
-$('#exportBtn').onclick = () => { saveNow(); download(`notelite-backup-${stamp()}.json`, JSON.stringify(S, null, 2), 'application/json'); };
+$('#exportBtn').onclick = async () => { saveNow(); const images = await exportImages(); download(`notelite-backup-${stamp()}.json`, JSON.stringify(Object.assign({}, S, Object.keys(images).length ? { images } : {}), null, 2), 'application/json'); };
 $('#importBtn').onclick = () => $('#importFile').click();
 /* Merge an exported/old NoteLite dataset into the current one. Returns number of pages imported. */
 function importData(d, ask) {
@@ -1614,9 +1689,11 @@ function importData(d, ask) {
     S.pages[id] = pg; if (!S.order.includes(id)) S.order.push(id);
   });
   S.orderAt = S.folderOrderAt = t;
+  if (d.imgs && typeof d.imgs === 'object') S.imgs = mergeImgs(S.imgs, d.imgs);
   if (!S.pages[S.active]) S.active = ids[0];
   fix(S);
   save(); render();
+  if (d.images) importImages(d.images);
   return ids.length;
 }
 /* Seed (welcome) pages the user never touched: removed when real data arrives from elsewhere. */
@@ -1671,7 +1748,7 @@ const WEB = /^https?:$/.test(location.protocol);
 const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const STANDALONE = !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
 const SKEY = 'notelite.sync';
-const SYNC_KEYS = ['pages', 'order', 'orderAt', 'folders', 'folderOrder', 'folderOrderAt', 'tomb', 'today'];
+const SYNC_KEYS = ['pages', 'order', 'orderAt', 'folders', 'folderOrder', 'folderOrderAt', 'tomb', 'today', 'imgs'];
 const SM = { token: '', gist: '', key: '', salt: '', iter: 0, login: '', ver: '', etag: '', base: {}, last: 0, skipSetup: false };
 let CK = null, syncTimer = null, syncing = false, pending = true, haveRemote = false, lastInputAt = 0, lastWriteAt = 0;
 let syncState = 'off';
@@ -1748,7 +1825,8 @@ function mergeDocs(L, R, base) {
   return {
     pages, order, orderAt: Math.max(+L.orderAt || 0, +R.orderAt || 0) + (copies.length ? 1 : 0),
     folders, folderOrder, folderOrderAt: Math.max(+L.folderOrderAt || 0, +R.folderOrderAt || 0), tomb,
-    today: L.today && R.today ? pickW(L.today, R.today) : (L.today || R.today || undefined)
+    today: L.today && R.today ? pickW(L.today, R.today) : (L.today || R.today || undefined),
+    imgs: mergeImgs(L.imgs, R.imgs)
   };
 }
 const docOf = st => { const d = {}; SYNC_KEYS.forEach(k => { d[k] = st[k]; }); return d; };
@@ -1884,6 +1962,7 @@ async function syncNow(force) {
   }
 }
 function finishSync(ver, etag, doc) {
+  setTimeout(pumpImages, 300);
   SM.ver = ver; SM.etag = etag; SM.last = Date.now(); SM.base = tsMap(doc); haveRemote = true;
   saveSM(); setSync('ok');
 }
@@ -1898,7 +1977,7 @@ function applyMerged(m) {
   if (navSig() !== navBefore) renderNav();
   if (S.active !== act || viewSig() !== before) refreshPage();
   else if (S.active !== TODAY) setCrumb();
-  updateTodayNav();
+  updateTodayNav(); hydrateImages();
 }
 function captureView() {
   const v = { scroll: $('#scroll').scrollTop, lists: {}, caret: null };
@@ -2091,6 +2170,243 @@ async function initSync() {
   } else setSync('off');
   if (IS_IOS && WEB && !STANDALONE && !sessionStorage.getItem('nl.here')) showAddHome();
   else if (WEB && !configured() && !SM.skipSetup) showSetup();
+}
+
+/* ---------- Images in notes ----------
+   Pixels never go into the note data (browser storage is small and the note file is re-uploaded on every sync).
+   • On this device: compressed image in IndexedDB, key = image id.  Note block = { type:'image', img:id }.
+   • Sync: each image is encrypted with the same key as the notes and stored once in its own secret Gist;
+     S.imgs[id] = { w, h, g: gistId } travels with the notes. Other devices download an image only when it's shown. */
+const IDB = (() => {
+  let dbp = null;
+  const open = () => dbp || (dbp = new Promise((res, rej) => {
+    const r = indexedDB.open('notelite', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('img');
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => { dbp = null; rej(r.error); };
+  }));
+  const run = async (mode, fn) => {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('img', mode), rq = fn(tx.objectStore('img'));
+      tx.oncomplete = () => res(rq && rq.result); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error);
+    });
+  };
+  return { get: k => run('readonly', s => s.get(k)), put: (k, v) => run('readwrite', s => s.put(v, k)) };
+})();
+const IMG_MAX = 2000;                                   // longest side after resize (sharp enough for screenshots)
+const IMGURL = new Map(), IMGLOAD = new Map();
+let persistAsked = false;
+
+async function decodeImage(file) {
+  if (window.createImageBitmap) { try { return await createImageBitmap(file); } catch (_) {} }
+  const u = URL.createObjectURL(file), im = new Image();
+  im.src = u;
+  try { await im.decode(); } finally { setTimeout(() => URL.revokeObjectURL(u), 2000); }
+  return im;
+}
+/* resize + compress: WebP where the browser can make it, else JPEG; keeps small originals (and GIF animations) untouched */
+async function prepImage(file) {
+  const src = await decodeImage(file);
+  const w0 = src.width || src.naturalWidth, h0 = src.height || src.naturalHeight;
+  if (!w0 || !h0) throw new Error('decode');
+  if (file.type === 'image/gif' && file.size <= 3e6) return { blob: file, w: w0, h: h0 };
+  const k = Math.min(1, IMG_MAX / Math.max(w0, h0)), W = Math.max(1, Math.round(w0 * k)), H = Math.max(1, Math.round(h0 * k));
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const g = cv.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(src, 0, 0, W, H);
+  if (src.close) src.close();
+  const toBlob = (t, q) => new Promise(r => cv.toBlob(r, t, q));
+  let out = await toBlob('image/webp', 0.86);
+  if (!out || out.type !== 'image/webp') {
+    g.globalCompositeOperation = 'destination-over'; g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);   // JPEG has no transparency
+    out = await toBlob('image/jpeg', 0.86);
+  }
+  if (!out || (k === 1 && file.size <= out.size && file.size < 1.5e6 && /^image\/(png|jpeg|webp)$/.test(file.type))) out = file;
+  return { blob: out, w: W, h: H };
+}
+function usedImgIds() {            // images still placed in some note (deleted ones are not uploaded / exported)
+  const u = new Set();
+  Object.values(S.pages).forEach(p => (p.type === 'note' ? p.blocks || [] : []).forEach(b => { if (b.type === 'image' && b.img) u.add(b.img); }));
+  return u;
+}
+function imgMeta(id) { return (S.imgs && S.imgs[id]) || null; }
+async function imageUrl(id) {
+  if (IMGURL.has(id)) return IMGURL.get(id);
+  if (IMGLOAD.has(id)) return IMGLOAD.get(id);
+  const p = (async () => {
+    let rec = await IDB.get(id).catch(() => null);
+    if (!rec) rec = await downloadImage(id);
+    const url = URL.createObjectURL(new Blob([rec.buf], { type: rec.type }));
+    IMGURL.set(id, url);
+    return url;
+  })();
+  IMGLOAD.set(id, p);
+  try { return await p; } finally { IMGLOAD.delete(id); }
+}
+async function downloadImage(id) {
+  const m = imgMeta(id);
+  if (!m || !m.g) throw new Error('pending');                   // not uploaded yet by the device that has it
+  if (!configured() || !CK) throw new Error('nosync');
+  const r = await gh('GET', '/gists/' + m.g);
+  if (!r.ok) throw new Error('http ' + r.status);
+  const j = await r.json(), f = Object.values(j.files || {})[0];
+  if (!f) throw new Error('empty');
+  const text = f.truncated ? await (await fetch(f.raw_url, { cache: 'no-store' })).text() : f.content;
+  const e = JSON.parse(text);
+  const buf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(e.iv) }, CK, unb64(e.ct));
+  const rec = { buf, type: e.type || 'image/jpeg', w: m.w, h: m.h };
+  await IDB.put(id, rec).catch(() => {});
+  return rec;
+}
+async function sealImage(rec) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, CK, rec.buf);
+  return JSON.stringify({ app: 'NoteLite', kind: 'image', v: 1, note: 'Ảnh NoteLite đã mã hóa (AES-256-GCM).', type: rec.type, iv: b64(iv), ct: b64(ct) });
+}
+let pumping = false;
+async function pumpImages() {                                   // upload images that exist only on this device
+  if (pumping || !configured() || !CK || !S.imgs) return;
+  const used = usedImgIds(), todo = Object.keys(S.imgs).filter(id => !S.imgs[id].g && used.has(id));
+  if (!todo.length) return;
+  pumping = true;
+  try {
+    for (const id of todo) {
+      const rec = await IDB.get(id).catch(() => null);
+      if (!rec) continue;
+      const r = await gh('POST', '/gists', { description: 'NoteLite · ảnh (đã mã hóa)', public: false, files: { 'notelite-image.enc.json': { content: await sealImage(rec) } } });
+      if (!r.ok) break;
+      const j = await r.json();
+      S.imgs[id] = { ...S.imgs[id], g: j.id };
+      save();
+    }
+  } catch (_) { /* offline: try again after the next sync */ }
+  finally { pumping = false; }
+}
+function mergeImgs(a, b) {
+  if (!a && !b) return undefined;
+  const r = { ...(a || {}) };
+  for (const k in (b || {})) if (!r[k] || (!r[k].g && b[k].g)) r[k] = b[k];
+  return r;
+}
+
+/* ---- image block in the editor ---- */
+function imageBlockBody(w, b) {
+  w.dataset.img = b.img || ''; w.tabIndex = 0;
+  const m = imgMeta(b.img), box = h('div', 'img-box');
+  if (m && m.w && m.h) { box.style.aspectRatio = m.w + ' / ' + m.h; box.style.maxWidth = Math.min(m.w, 900) + 'px'; }
+  const im = h('img'); im.alt = ''; im.draggable = false; im.decoding = 'async';
+  box.append(im, h('div', 'img-msg'));
+  w.append(box);
+  showImg(w);
+}
+function showImg(w) {
+  const id = w.dataset.img, im = $('img', w), msg = $('.img-msg', w);
+  if (!id || !im) return;
+  w.classList.remove('ready', 'missing'); w.classList.add('loading');
+  imageUrl(id).then(url => {
+    im.onload = () => { w.classList.remove('loading'); w.classList.add('ready'); const box = $('.img-box', w); box.style.aspectRatio = ''; };
+    im.src = url;
+  }).catch(err => {
+    w.classList.remove('loading'); w.classList.add('missing');
+    msg.textContent = err.message === 'pending' ? 'Ảnh đang được tải lên từ thiết bị khác…'
+      : err.message === 'nosync' ? 'Ảnh nằm trên thiết bị khác. Bật đồng bộ để xem.'
+      : 'Chưa tải được ảnh (kiểm tra mạng).';
+  });
+}
+function hydrateImages() { $$('.block[data-type=image]:not(.ready)').forEach(w => { if (!w.classList.contains('loading')) showImg(w); }); }
+function pickImageFiles(cb) {
+  const inp = h('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true; inp.style.display = 'none';
+  inp.onchange = () => { const fs = [...inp.files]; inp.remove(); if (fs.length) cb(fs); };
+  document.body.append(inp); inp.click();
+}
+const isEmptyText = w => w && w.dataset.type === 'p' && bc(w) && !bc(w).textContent.trim();
+/* insert images next to block `ref` ('after' | 'before' | 'replace' when ref is an empty line) */
+async function insertImages(files, ref, mode) {
+  files = files.filter(f => f && /^image\//.test(f.type));
+  if (!files.length || !ED) return;
+  if (!persistAsked && navigator.storage && navigator.storage.persist) { persistAsked = true; navigator.storage.persist().catch(() => {}); }
+  const page = cur(), blocks = [];
+  let anchor = ref;
+  files.forEach((f, i) => {
+    const nb = blockEl({ id: uid(), type: 'image', img: '' });
+    nb.classList.add('loading'); $('.img-msg', nb).textContent = 'Đang xử lý ảnh…';
+    if (i === 0 && mode === 'replace' && isEmptyText(ref)) ref.replaceWith(nb);
+    else if (i === 0 && mode === 'before') ref.before(nb);
+    else anchor.after(nb);
+    anchor = nb; blocks.push([nb, f]);
+  });
+  let next = anchor.nextElementSibling;
+  if (!next || !bc(next)) { next = newBlock('p'); anchor.after(next); }
+  focusStart(bc(next));
+  let failed = 0;
+  for (const [nb, f] of blocks) {
+    try {
+      const r = await prepImage(f), buf = await r.blob.arrayBuffer(), id = uid();
+      await IDB.put(id, { buf, type: r.blob.type || f.type, w: r.w, h: r.h });
+      S.imgs = S.imgs || {};
+      S.imgs[id] = { w: r.w, h: r.h, size: buf.byteLength, at: now() };
+      IMGURL.set(id, URL.createObjectURL(r.blob));
+      if (!nb.isConnected) continue;
+      const fresh = blockEl({ id: nb.dataset.id, type: 'image', img: id });
+      nb.replaceWith(fresh);
+    } catch (e) { failed++; nb.remove(); }
+  }
+  if (cur() === page && ED) syncNote();
+  if (failed) toast(failed === 1 ? 'Không đọc được ảnh này (định dạng không hỗ trợ).' : `Không đọc được ${failed} ảnh.`);
+  pumpImages();
+}
+function imageRec(id) { return IDB.get(id).catch(() => null); }
+async function downloadImageFile(id) {
+  const rec = await imageRec(id); if (!rec) return;
+  const ext = (rec.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+  const a = h('a'); a.href = URL.createObjectURL(new Blob([rec.buf], { type: rec.type })); a.download = `notelite-${id}.${ext}`;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function removeImageBlock(w) {
+  const prev = sibEd(w, -1), next = sibEd(w, 1);
+  w.remove();
+  if (!ED.children.length) ED.append(newBlock('p'));
+  syncNote();
+  const t = prev || next || bc(ED.firstElementChild);
+  if (t) (prev ? focusEnd : focusStart)(t);
+}
+function openLightbox(w) {
+  const im = $('img', w); if (!im || !im.src) return;
+  const o = h('div', 'lightbox');
+  o.innerHTML = `<img src="${im.src}" alt=""><div class="lb-bar"><button data-a="dl">${IC.down}<span>Tải xuống</span></button><button data-a="del" class="danger">${IC.trash}<span>Xóa ảnh</span></button><button data-a="x">${IC.x}<span>Đóng</span></button></div>`;
+  const close = () => { o.remove(); document.removeEventListener('keydown', onK, true); };
+  const onK = e => { if (e.key === 'Escape') { e.preventDefault(); close(); } };
+  document.addEventListener('keydown', onK, true);
+  o.addEventListener('click', e => {
+    const b = e.target.closest('[data-a]');
+    if (!b) { if (e.target === o || e.target.tagName === 'IMG') close(); return; }
+    if (b.dataset.a === 'dl') downloadImageFile(w.dataset.img);
+    else if (b.dataset.a === 'del') { close(); removeImageBlock(w); }
+    else close();
+  });
+  document.body.append(o);
+}
+async function exportImages() {
+  const out = {};
+  const used = usedImgIds();
+  for (const id of Object.keys(S.imgs || {}).filter(x => used.has(x))) {
+    const rec = await imageRec(id);
+    if (rec) out[id] = { type: rec.type, w: rec.w, h: rec.h, data: b64(rec.buf) };
+  }
+  return out;
+}
+async function importImages(images) {
+  if (!images || typeof images !== 'object') return;
+  S.imgs = S.imgs || {};
+  for (const id of Object.keys(images)) {
+    const x = images[id]; if (!x || !x.data) continue;
+    try {
+      const buf = unb64(x.data).buffer;
+      await IDB.put(id, { buf, type: x.type || 'image/jpeg', w: x.w, h: x.h });
+      if (!S.imgs[id]) S.imgs[id] = { w: x.w, h: x.h, size: buf.byteLength, at: now() };
+    } catch (_) {}
+  }
+  save(); hydrateImages(); pumpImages();
 }
 
 /* ---------- Highlight today ----------
@@ -2363,6 +2679,7 @@ document.addEventListener('keydown', e => {
   else if (mod && (e.key === 's' || e.key === 'S')) { e.preventDefault(); dirty = true; saveNow(); }
 });
 window.addEventListener('beforeunload', saveNow);
+['dragover', 'drop'].forEach(ev => window.addEventListener(ev, e => { if (e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files') && !e.defaultPrevented) e.preventDefault(); }));
 let fitT = null;
 window.addEventListener('resize', () => { clearTimeout(fitT); fitT = setTimeout(fitBoard, 100); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); });
