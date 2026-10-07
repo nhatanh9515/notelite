@@ -131,7 +131,9 @@ svg{width:16px;height:16px;flex:none;display:block}
 .btn:hover{background:var(--hov)}
 
 /* Editor */
-.editor{counter-reset:num;font-size:16px;line-height:1.5}
+.editor{counter-reset:num;font-size:16px;line-height:1.5;outline:none}
+.block.bsel::before{content:"";position:absolute;inset:-1px -6px;border-radius:5px;background:rgba(35,131,226,.16);pointer-events:none;z-index:1}
+.editor.bsel-mode .bc,.editor.bsel-mode{-webkit-user-select:none;user-select:none;caret-color:transparent}
 .block{position:relative;display:flex;align-items:flex-start;margin:1px 0}
 .block:not([data-type=number]){counter-reset:num}
 .block[data-type=number]{counter-increment:num}
@@ -685,6 +687,7 @@ let ED = null, BOARD = null;
 function renderPage() {
   closeMenu(); $('#fmt').hidden = true; if (typeof hideLP === 'function' && LPA) hideLP();
   const el = $('#page'), p = cur();
+  if (typeof clearBlockSel === 'function') clearBlockSel();
   ED = null; BOARD = null; MTABS = null;
   el.innerHTML = '';
   $('#moreBtn').style.visibility = p ? '' : 'hidden';
@@ -970,6 +973,8 @@ function renderNote(p, host) {
     else { const nb = newBlock('p'); ED.append(nb); focusStart(bc(nb)); syncNote(); }
   });
   host.append(ED, tail);
+  ED.tabIndex = -1;
+  ED.addEventListener('mousedown', onEditorMouseDown);
   bindEditor(ED);
 }
 const LISTY = ['bullet', 'number', 'todo', 'quote'];
@@ -979,6 +984,18 @@ function onKey(e) {
   const w = c.parentElement, type = w.dataset.type, mod = e.ctrlKey || e.metaKey;
   if (!LP.hidden && !LP.classList.contains('editing')) hideLP();
   if (mod && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); linkFromSelection(); return; }
+  if (mod && !e.shiftKey && (e.key === 'a' || e.key === 'A')) {
+    const s = getSelection(), whole = !c.textContent || (s.rangeCount && s.toString().length >= c.textContent.length);
+    if (whole) { e.preventDefault(); selectAllBlocks(); }
+    return;
+  }
+  if (e.shiftKey && !mod && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+    const up = e.key === 'ArrowUp', s = getSelection(), all = edBlocks(), j = all.indexOf(w) + (up ? -1 : 1);
+    const edge = up ? (s.rangeCount && caretOffset(c) === 0 && (s.isCollapsed || s.focusNode === s.anchorNode && s.focusOffset <= s.anchorOffset || s.toString().length >= c.textContent.length))
+                    : (atEnd(c) || (s.rangeCount && s.toString().length >= c.textContent.length));
+    if (edge && j >= 0 && j < all.length) { e.preventDefault(); selectBlocks(w, all[j]); }
+    return;
+  }
   if (mod && e.key === 'Enter') {
     e.preventDefault();
     if (type === 'todo') { w.classList.toggle('checked'); $('.chk', w).classList.toggle('on'); syncNote(); return; }
@@ -1092,6 +1109,8 @@ function onPaste(e) {
   e.preventDefault();
   const text = (e.clipboardData.getData('text/plain') || '').replace(/\r\n?/g, '\n');
   const w = c.parentElement;
+  const nl = w.dataset.type === 'code' ? null : pastedBlocks(e.clipboardData);
+  if (nl) { insertBlockList(nl, w, isEmptyText(w)); return; }
   const imgs = text.trim() ? [] : clipImages(e.clipboardData);          // plain text wins (e.g. cells copied from Excel also carry a picture)
   if (imgs.length) { insertImages(imgs, w, 'replace'); return; }
   if (!text) return;
@@ -1189,7 +1208,240 @@ function bindEditor(ed) {
   });
   ed.addEventListener('dragend', () => endDragB(ed));
 }
+/* ---------- Multi-block selection & copy ----------
+   Every line is its own editable box, and browsers can't drag a text selection across boxes.
+   So, like Notion: dragging past the current line switches to selecting whole lines (blocks).
+   ⌘A twice, Shift+click and Shift+↑/↓ at a line edge do the same. Selected lines can be copied,
+   cut or deleted; the copy carries plain text + rich HTML (+ a hidden copy of the blocks so pasting
+   back into NoteLite keeps headings, lists, checkboxes and images exactly). */
+let SELB = [], SELA = null, SELF = null, BDRAG = null;
+const edBlocks = () => (ED ? $$(':scope > .block', ED) : []);
+function paintSel() {
+  $$('.block.bsel', ED || document).forEach(x => x.classList.remove('bsel'));
+  SELB.forEach(x => x.classList.add('bsel'));
+}
+function selectBlocks(anchor, focus) {
+  const all = edBlocks(); let i = all.indexOf(anchor), j = all.indexOf(focus);
+  if (i < 0 || j < 0) return;
+  SELA = anchor; SELF = focus;
+  if (i > j) [i, j] = [j, i];
+  SELB = all.slice(i, j + 1);
+  paintSel();
+  const s = getSelection(); if (s.rangeCount) s.removeAllRanges();
+  if (document.activeElement !== ED) ED.focus({ preventScroll: true });
+  FMT.hidden = true; if (LPA) hideLP();
+}
+function selectAllBlocks() { const all = edBlocks(); if (all.length) selectBlocks(all[0], all[all.length - 1]); }
+function clearBlockSel() { if (!SELB.length && !SELA) return; SELB = []; SELA = SELF = null; paintSel(); }
+const htmlText = html => { const d = document.createElement('div'); d.innerHTML = String(html || '').replace(/<br\s*\/?>/gi, '\n'); return d.textContent; };
+const encMark = o => btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+const decMark = s => JSON.parse(decodeURIComponent(escape(atob(s))));
+
+/* blocks (serialized) → { plain, html } ; imgSrc(id) gives a data URL when we have one */
+function clipOf(list, imgSrc) {
+  const plain = [], html = [];
+  let n = 0, open = null;
+  const close = () => { if (open) { html.push(open === 'todo' ? '</ul>' : `</${open}>`); open = null; } };
+  const listOpen = tag => { if (open === tag) return; close(); open = tag; html.push(tag === 'todo' ? '<ul style="list-style:none;padding-left:0">' : `<${tag}>`); };
+  list.forEach(b => {
+    const t = htmlText(b.html), inner = b.html || '';
+    n = b.type === 'number' ? n + 1 : 0;
+    switch (b.type) {
+      case 'h1': case 'h2': case 'h3': close(); plain.push(t); html.push(`<${b.type}>${inner}</${b.type}>`); break;
+      case 'bullet': listOpen('ul'); plain.push('- ' + t); html.push(`<li>${inner}</li>`); break;
+      case 'number': listOpen('ol'); plain.push(n + '. ' + t); html.push(`<li>${inner}</li>`); break;
+      case 'todo': listOpen('todo'); plain.push((b.checked ? '☑ ' : '☐ ') + t); html.push(`<li>${b.checked ? '☑' : '☐'} ${b.checked ? `<s>${inner}</s>` : inner}</li>`); break;
+      case 'quote': close(); plain.push('> ' + t); html.push(`<blockquote>${inner}</blockquote>`); break;
+      case 'code': close(); plain.push(t); html.push(`<pre><code>${esc(t)}</code></pre>`); break;
+      case 'divider': close(); plain.push('---'); html.push('<hr>'); break;
+      case 'image': {
+        close(); plain.push('[Ảnh]');
+        const src = imgSrc && imgSrc(b.img), wpx = +b.width && +b.width < IMG_FULL ? +b.width : autoImgWidth(imgMeta(b.img));
+        if (src) html.push(`<p><img src="${src}" width="${wpx}" style="max-width:100%"></p>`);
+        break;
+      }
+      default: close(); plain.push(t); html.push(`<p>${inner || '<br>'}</p>`);
+    }
+  });
+  close();
+  const mark = encMark({ notelite: 1, blocks: list.map(b => ({ type: b.type, html: b.html, checked: !!b.checked, img: b.img, width: b.width })) });
+  return { plain: plain.join('\n'), html: `<meta charset="utf-8"><div data-notelite="${mark}">${html.join('')}</div>` };
+}
+const blobToDataUrl = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
+async function richClip(list) {             // same as clipOf, but with the pictures embedded
+  const urls = {};
+  for (const b of list) if (b.type === 'image' && b.img && !urls[b.img]) {
+    const rec = await imageRec(b.img);
+    if (rec) urls[b.img] = await blobToDataUrl(new Blob([rec.buf], { type: rec.type }));
+  }
+  return clipOf(list, id => urls[id]);
+}
+/* copy: synchronous copy-event path (works everywhere, keeps the user gesture), then — when there are
+   pictures — an async clipboard write that adds them for apps like Word / Google Docs / Mail */
+function copyBlockList(list, quiet) {
+  if (!list.length) return false;
+  const data = clipOf(list);
+  let done = false;
+  const onCopy = ev => { ev.clipboardData.setData('text/plain', data.plain); ev.clipboardData.setData('text/html', data.html); ev.preventDefault(); done = true; };
+  document.addEventListener('copy', onCopy, true);
+  try { document.execCommand('copy'); } catch (_) {}
+  document.removeEventListener('copy', onCopy, true);
+  if (!done && navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(data.plain).catch(() => {});
+  if (list.some(b => b.type === 'image') && window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+    try {
+      const rich = richClip(list);
+      navigator.clipboard.write([new ClipboardItem({
+        'text/html': rich.then(r => new Blob([r.html], { type: 'text/html' })),
+        'text/plain': new Blob([data.plain], { type: 'text/plain' })
+      })]).catch(() => {});
+    } catch (_) {}
+  }
+  if (!quiet) toast(list.length === 1 ? 'Đã sao chép' : `Đã sao chép ${list.length} dòng`);
+  return true;
+}
+function deleteSelectedBlocks() {
+  if (!SELB.length || !ED) return;
+  const all = edBlocks(), first = all.indexOf(SELB[0]);
+  SELB.forEach(x => x.remove());
+  clearBlockSel();
+  if (!ED.children.length) ED.append(newBlock('p'));
+  syncNote();
+  const rest = edBlocks(), near = rest[Math.max(0, first - 1)];
+  const t = (first > 0 && near && bc(near)) || (rest[0] && bc(rest[0]));
+  if (t) (first > 0 ? focusEnd : focusStart)(t);
+}
+/* paste blocks copied from NoteLite (keeps their exact types) */
+function pastedBlocks(dt) {
+  const htm = dt.getData('text/html') || '', m = htm.match(/data-notelite="([A-Za-z0-9+/=]+)"/);
+  if (!m) return null;
+  try { const o = decMark(m[1]); return o && o.notelite && Array.isArray(o.blocks) && o.blocks.length ? o.blocks : null; } catch (_) { return null; }
+}
+function insertBlockList(list, ref, replaceRef) {
+  let anchor = ref, last = null;
+  list.forEach((b, i) => {
+    const nb = blockEl({ ...b, id: uid() });
+    if (i === 0 && replaceRef) ref.replaceWith(nb); else anchor.after(nb);
+    anchor = last = nb;
+  });
+  let tgt = last && bc(last) ? last : null;
+  if (!tgt) { tgt = newBlock('p'); last.after(tgt); }
+  focusEnd(bc(tgt));
+  syncNote(); hydrateImages();
+}
+
+/* ---- mouse: drag across lines ---- */
+function startBlockDrag(e, startBlock) {
+  BDRAG = { start: startBlock, y: e.clientY, on: false };
+  document.addEventListener('mousemove', moveBlockDrag);
+  document.addEventListener('mouseup', endBlockDrag, { once: true });
+}
+function moveBlockDrag(e) {
+  if (!BDRAG || !ED || !ED.isConnected) return endBlockDrag();
+  if (!(e.buttons & 1)) return endBlockDrag();
+  const sc = $('#scroll'), r = sc.getBoundingClientRect();
+  if (e.clientY < r.top + 40) sc.scrollTop -= 14; else if (e.clientY > r.bottom - 40) sc.scrollTop += 14;     // auto-scroll near edges
+  const over = blockAtY(ED, e.clientY);
+  if (!over) return;
+  if (!BDRAG.start) { if (Math.abs(e.clientY - BDRAG.y) < 6) return; BDRAG.start = over; BDRAG.on = true; }   // started in the margin
+  if (!BDRAG.on) { if (over === BDRAG.start) return; BDRAG.on = true; }                                       // still inside the first line: normal text selection
+  ED.classList.add('bsel-mode');
+  selectBlocks(BDRAG.start, over);
+}
+function endBlockDrag() {
+  document.removeEventListener('mousemove', moveBlockDrag);
+  if (BDRAG && BDRAG.on && ED) { ED.classList.remove('bsel-mode'); const s = getSelection(); if (s.rangeCount) s.removeAllRanges(); ED.focus({ preventScroll: true }); }
+  BDRAG = null;
+}
+function onEditorMouseDown(e) {
+  if (e.button !== 0 || !ED) return;
+  const t = e.target;
+  if (t.closest('.grip, .chk, .img-rs')) return;
+  const blk = t.closest('.block');
+  if (e.shiftKey && blk) {
+    const ae = document.activeElement, from = SELB.length ? SELA : (ae && ae.closest && ae.closest('.block'));
+    if (from && from !== blk && ED.contains(from)) { e.preventDefault(); selectBlocks(from, blk); return; }
+  }
+  clearBlockSel();
+  startBlockDrag(e, blk);
+}
+/* drag that starts in the empty page margin beside the text */
+function onPageMarginMouseDown(e) {
+  if (e.button !== 0 || !ED || !ED.isConnected) return;
+  const t = e.target;
+  if (!(t === $('#scroll') || t === $('#page'))) return;
+  e.preventDefault(); clearBlockSel();
+  /* a click in the margin still ends any text editing (closes the format bar, drops the caret) */
+  const sl = getSelection(); if (sl.rangeCount) sl.removeAllRanges();
+  const ae = document.activeElement; if (ae && ae !== document.body && ED.contains(ae)) ae.blur();
+  FMT.hidden = true;
+  startBlockDrag(e, null);
+}
+
+/* ---- keyboard while lines are selected ---- */
+function onSelKey(e) {
+  if (!SELB.length || !ED) return;
+  const t = e.target;
+  if (t && t.closest && t.closest('input, textarea, .dlg, #menu, .ptitle, .lp')) return;
+  if (e.isComposing) return;
+  const mod = e.metaKey || e.ctrlKey, k = e.key;
+  if (mod && (k === 'c' || k === 'C' || k === 'x' || k === 'X')) {
+    e.preventDefault();
+    copyBlockList(SELB.map(ser), k.toLowerCase() === 'c' ? false : true);
+    if (k.toLowerCase() === 'x') { deleteSelectedBlocks(); toast('Đã cắt'); }
+  } else if (mod && (k === 'a' || k === 'A')) { e.preventDefault(); selectAllBlocks(); }
+  else if (k === 'Escape') { e.preventDefault(); clearBlockSel(); }
+  else if (k === 'Backspace' || k === 'Delete') { e.preventDefault(); deleteSelectedBlocks(); }
+  else if (e.shiftKey && (k === 'ArrowUp' || k === 'ArrowDown')) {
+    e.preventDefault();
+    const all = edBlocks(), j = all.indexOf(SELF) + (k === 'ArrowUp' ? -1 : 1);
+    if (j >= 0 && j < all.length) { selectBlocks(SELA, all[j]); all[j].scrollIntoView({ block: 'nearest' }); }
+  } else if (k === 'ArrowUp' || k === 'ArrowDown' || k === 'Enter') {
+    e.preventDefault();
+    const tgt = k === 'ArrowUp' ? SELB[0] : SELB[SELB.length - 1];
+    clearBlockSel();
+    const ec = bc(tgt) || sibEd(tgt, k === 'ArrowUp' ? -1 : 1);
+    if (ec) (k === 'ArrowUp' ? focusStart : focusEnd)(ec);
+  } else if (!mod && k.length === 1) clearBlockSel();
+}
+function onSelPaste(e) {
+  if (!SELB.length || !ED || (e.target.closest && e.target.closest('.bc, input, textarea'))) return;
+  e.preventDefault();
+  const ref = SELB[SELB.length - 1], list = pastedBlocks(e.clipboardData);
+  let items = list;
+  if (!items) {
+    const text = (e.clipboardData.getData('text/plain') || '').replace(/\r\n?/g, '\n');
+    if (!text) return;
+    items = text.split('\n').map(l => { const b = parseLine(l); return { type: b.type, html: b.type === 'divider' ? '' : inlineHtml(b.text), checked: b.checked }; });
+  }
+  const p = newBlock('p'); ref.after(p);
+  SELB.forEach(x => x.remove()); clearBlockSel();
+  insertBlockList(items, p, true);
+}
+document.addEventListener('keydown', onSelKey, true);
+document.addEventListener('paste', onSelPaste, true);
+document.addEventListener('copy', e => {           // Edit ▸ Copy from the browser menu
+  if (!SELB.length || (e.target.closest && e.target.closest('.bc, input, textarea'))) return;
+  const d = clipOf(SELB.map(ser)); e.clipboardData.setData('text/plain', d.plain); e.clipboardData.setData('text/html', d.html); e.preventDefault();
+});
+document.addEventListener('mousedown', e => {
+  if (SELB.length && ED && !ED.contains(e.target) && !(e.target.closest && e.target.closest('#menu, #toast'))) clearBlockSel();
+}, true);
+$('#scroll').addEventListener('mousedown', onPageMarginMouseDown);
+
 function openBlockMenu(w, g) {
+  if (SELB.length > 1 && SELB.includes(w)) {
+    const n = SELB.length;
+    openMenu(g.getBoundingClientRect(), [
+      { label: `Sao chép ${n} dòng`, ic: IC.copy, act: 'copy' },
+      { label: `Cắt ${n} dòng`, ic: IC.copy, act: 'cut' },
+      { label: `Xóa ${n} dòng`, ic: IC.trash, act: 'del', cls: 'danger' }
+    ], it => {
+      if (it.act === 'del') { deleteSelectedBlocks(); return; }
+      copyBlockList(SELB.map(ser), it.act === 'cut');
+      if (it.act === 'cut') { deleteSelectedBlocks(); toast('Đã cắt'); }
+    }, 'block');
+    return;
+  }
   if (w.dataset.type === 'image') {
     openMenu(g.getBoundingClientRect(), [
       { head: 'Kích thước' },
@@ -1737,11 +1989,17 @@ $('#moreBtn').onclick = () => {
     { label: 'Chuyển vào thư mục…', ic: IC.folder, act: 'move' },
     { label: 'Di chuyển lên', ic: IC.mvUp, act: 'up' },
     { label: 'Di chuyển xuống', ic: IC.mvDown, act: 'down' },
+    { label: p.type === 'note' ? 'Sao chép toàn bộ nội dung' : 'Sao chép danh sách task', ic: IC.copy, act: 'copyall' },
     { label: 'Xuất trang ra Markdown (.md)', ic: IC.md, act: 'md' },
     { label: 'Nhân bản trang', ic: IC.copy, act: 'dup' },
     { label: 'Xóa trang', ic: IC.trash, act: 'del', cls: 'danger' }
   ], it => {
     if (it.act === 'move') openMoveMenu(p, $('#moreBtn').getBoundingClientRect());
+    else if (it.act === 'copyall') {
+      if (p.type === 'note') { if (ED) syncNote(); copyBlockList(p.blocks || [], true); }
+      else copyBlockList(COLS.flatMap(col => { const ts = p.tasks.filter(t => t.col === col.id && t.text.trim()); return ts.length ? [{ type: 'h3', html: esc(col.name) }, ...ts.map(t => ({ type: 'todo', html: esc(t.text), checked: t.col === 'done' }))] : []; }), true);
+      toast(p.type === 'note' ? 'Đã sao chép toàn bộ nội dung trang' : 'Đã sao chép danh sách task');
+    }
     else if (it.act === 'md') download(`${(p.title || 'trang').replace(/[\\/:*?"<>|]+/g, '-').slice(0, 60)}.md`, pageToMd(p), 'text/markdown');
     else if (it.act === 'dup') duplicatePage(p.id);
     else if (it.act === 'up' || it.act === 'down') stepPage(p.id, it.act === 'up' ? -1 : 1);
@@ -1908,7 +2166,7 @@ function checkResp(r) {
 function uiBusy() {
   const ae = document.activeElement;
   if (Date.now() - lastInputAt < 1200) return true;
-  if (M.open || DRAGB || DRAGT || DRAGP || DRAGF) return true;
+  if (M.open || DRAGB || DRAGT || DRAGP || DRAGF || SELB.length || BDRAG) return true;
   if (LP && !LP.hidden && LP.classList.contains('editing')) return true;
   if (ae && ae.classList && (ae.classList.contains('rename') || (ae.classList.contains('ttext') && !ae.textContent.trim()))) return true;
   if (document.querySelector('.ovl')) return true;
