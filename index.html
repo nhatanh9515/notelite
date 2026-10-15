@@ -327,7 +327,10 @@ svg{width:16px;height:16px;flex:none;display:block}
 .trow{display:grid;grid-template-columns:auto 1fr auto;column-gap:10px;align-items:start;padding:10px 6px 10px 10px;border-radius:9px;background:var(--card);box-shadow:var(--shadow);transition:opacity .2s}
 .trow .tchk{margin-top:2px}
 .trow-body{min-width:0}
-.trow-text{font-size:15px;font-weight:500;line-height:1.45;word-break:break-word}
+.trow-text{font-size:15px;font-weight:500;line-height:1.45;word-break:break-word;outline:none;border-radius:4px;margin:-1px -4px;padding:1px 4px;cursor:text}
+.trow-text:hover{background:var(--hov)}
+.trow-text:focus{background:var(--hov);box-shadow:0 0 0 2px rgba(35,131,226,.35)}
+.trow-text:empty::before{content:attr(data-ph);color:var(--ph);font-weight:400}
 .trow-text a[href]{color:var(--link);text-decoration:underline;text-underline-offset:3px;word-break:break-all}
 .trow.is-done .trow-text{text-decoration:line-through;color:var(--t3)}
 .trow-src{display:inline-flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:4px;font-size:12px;color:var(--t3);border-radius:4px;text-align:left}
@@ -2168,7 +2171,7 @@ function uiBusy() {
   if (Date.now() - lastInputAt < 1200) return true;
   if (M.open || DRAGB || DRAGT || DRAGP || DRAGF || SELB.length || BDRAG) return true;
   if (LP && !LP.hidden && LP.classList.contains('editing')) return true;
-  if (ae && ae.classList && (ae.classList.contains('rename') || (ae.classList.contains('ttext') && !ae.textContent.trim()))) return true;
+  if (ae && ae.classList && (ae.classList.contains('rename') || ((ae.classList.contains('ttext') || ae.classList.contains('trow-text')) && !ae.textContent.trim()))) return true;
   if (document.querySelector('.ovl')) return true;
   return false;
 }
@@ -2261,6 +2264,7 @@ function captureView() {
     if (ae.classList.contains('ptitle')) v.caret = { k: 'title', off };
     else if (ae.closest('.block')) v.caret = { k: 'block', id: ae.closest('.block').dataset.id, off };
     else if (ae.closest('.card')) v.caret = { k: 'task', id: ae.closest('.card').dataset.id, off };
+    else if (ae.closest('.trow')) v.caret = { k: 'today', id: ae.closest('.trow').dataset.key, off };
   }
   return v;
 }
@@ -2271,6 +2275,7 @@ function restoreView(v) {
   let el = null;
   if (c.k === 'title') el = $('.ptitle');
   else if (c.k === 'block') { const b = $(`.block[data-id="${c.id}"]`); el = b && bc(b); }
+  else if (c.k === 'today') { const tr = [...$$('.trow')].find(x => x.dataset.key === c.id); el = tr && $('.trow-text', tr); }
   else { const cd = $(`.card[data-id="${c.id}"]`); el = cd && $('.ttext', cd); }
   if (!el) return;
   el.focus({ preventScroll: true });
@@ -2787,7 +2792,10 @@ function todayRow({ it, p, t }) {
   const chk = h('button', 'tchk' + (isDone ? ' on' : ''), IC.check);
   chk.title = isDone ? 'Bỏ tick → đưa task về cột To-do' : 'Tick → task chuyển sang cột Done';
   const body = h('div', 'trow-body');
-  const tx = h('div', 'trow-text'); tx.textContent = t.text; linkifyEl(tx);
+  /* the text IS the original task: editing here edits it on its own board too (and syncs) */
+  const tx = h('div', 'trow-text'); tx.contentEditable = 'true'; tx.spellcheck = false; tx.dataset.ph = 'Nhập tên task…';
+  tx.title = 'Bấm để sửa · thay đổi được lưu vào trang “' + (p.title || 'Không có tiêu đề') + '”';
+  tx.textContent = t.text; linkifyEl(tx);
   const src = h('button', 'trow-src', `<span>${esc(p.icon || '✅')}</span><span class="nm">${esc(p.title || 'Không có tiêu đề')}</span><span class="dot">·</span><span class="cl cl-${t.col}">${colName(t.col)}</span>`);
   src.title = 'Mở trang chứa task này';
   body.append(tx, src);
@@ -2806,6 +2814,24 @@ function todayRow({ it, p, t }) {
   };
   src.onclick = () => openPage(p.id);
   tx.addEventListener('click', e => { const a = e.target.closest('a[href]'); if (a) { e.preventDefault(); openUrl(a.href); } });
+  const before = t.text;
+  tx.addEventListener('input', () => {
+    if (tx.innerHTML === '<br>') tx.innerHTML = '';
+    const v = tx.textContent.replace(/\n/g, ' ');
+    if (!v.trim()) return;                       // an empty name isn't saved (the task is never deleted from here)
+    t.text = v; t.updatedAt = now(); touch(p);
+  });
+  tx.addEventListener('keydown', e => {
+    if (e.isComposing || e.keyCode === 229) return;
+    if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); tx.blur(); }
+  });
+  tx.addEventListener('paste', e => { e.preventDefault(); document.execCommand('insertText', false, (e.clipboardData.getData('text/plain') || '').replace(/\s*\n\s*/g, ' ')); });
+  tx.addEventListener('focusout', () => {
+    const v = tx.textContent.replace(/\s+/g, ' ').trim();
+    if (!v) { t.text = before; tx.textContent = before; toast('Tên task không được để trống, đã giữ tên cũ'); }
+    else if (v !== t.text || t.text !== t.text.trim()) { t.text = v; t.updatedAt = now(); touch(p); }
+    tx.textContent = t.text; linkifyEl(tx);
+  });
   rm.onclick = () => {
     const td = todayList(); if (!td) return;
     setToday(td.items.filter(i => tkey(i) !== tkey(it))); renderPage();
