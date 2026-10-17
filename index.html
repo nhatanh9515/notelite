@@ -255,6 +255,9 @@ svg{width:16px;height:16px;flex:none;display:block}
 .card:hover{background:var(--cardh)}
 .card.dragging{opacity:.35}
 .card.leaving{opacity:0;transform:translateX(12px) scale(.97)}
+.card.ghost{box-shadow:var(--lift);cursor:default}
+.lightbox{animation:fade-in .2s var(--ease-out)}
+.lightbox img{animation:dlg-in .26s var(--ease-out)}
 .card.flash{animation:flash 1.4s var(--ease-out)}
 @keyframes flash{0%,35%{box-shadow:0 0 0 2px var(--acc),var(--shadow)}100%{box-shadow:var(--shadow)}}
 .tchk{width:18px;height:18px;margin-top:1px;border:1.5px solid var(--t3);border-radius:50%;display:grid;place-items:center;transition:background-color .18s var(--ease-out),border-color .18s,transform .16s var(--ease-out)}
@@ -364,7 +367,7 @@ svg{width:16px;height:16px;flex:none;display:block}
 .today-intro{margin:28px 4px 12px}
 .today-intro h3{font:500 25px/1.2 var(--serif);letter-spacing:-.01em;margin:0 0 6px}
 .today-intro p{margin:0;color:var(--t2);font-size:14px;max-width:60ch}
-.today-list{display:flex;flex-direction:column;margin-top:14px;padding:6px 8px 6px 4px;border-radius:var(--r-lg);background:var(--card);box-shadow:var(--shadow)}
+.today-list{position:relative;display:flex;flex-direction:column;margin-top:14px;padding:6px 8px 6px 4px;border-radius:var(--r-lg);background:var(--card);box-shadow:var(--shadow)}
 .trow{position:relative;display:grid;grid-template-columns:auto auto 1fr auto;column-gap:12px;align-items:start;padding:12px 4px 12px 2px;border-radius:var(--r-md);background:var(--card);transition:box-shadow .2s var(--ease-out),transform .2s var(--ease-out)}
 .trow:not(:last-child)::after{content:"";position:absolute;left:36px;top:38px;bottom:-11px;width:1.5px;border-radius:1px;background:var(--bd);pointer-events:none}
 .trow.tdragging::after{display:none}
@@ -372,7 +375,7 @@ svg{width:16px;height:16px;flex:none;display:block}
 .trow-grip svg{width:10px;height:16px}
 .trow:hover .trow-grip{opacity:1}
 .trow-grip:hover{background:var(--hov2)}
-.trow.tdragging{z-index:5;box-shadow:var(--lift);transform:scale(1.015)}
+.trow.tdragging{z-index:5;box-shadow:var(--lift);transition:box-shadow .2s var(--ease-out)}
 .trow.tdragging .trow-grip{opacity:1;cursor:grabbing}
 body.tdrag-on,body.tdrag-on *{cursor:grabbing!important;-webkit-user-select:none;user-select:none}
 .trow .tchk{width:22px;height:22px;margin-top:1px}
@@ -461,7 +464,11 @@ body.tdrag-on,body.tdrag-on *{cursor:grabbing!important;-webkit-user-select:none
   .crumb-f,.crumb-sep{display:none}
   .mtabs{display:flex;gap:4px;padding:4px;margin:2px 0 12px;border-radius:14px;background:var(--hov2)}
   .mtabs button{flex:1;height:36px;border-radius:10px;font-size:14px;font-weight:500;color:var(--t2);display:flex;align-items:center;justify-content:center;gap:6px}
-  .mtabs button.on{background:var(--card);color:var(--text);box-shadow:var(--shadow)}
+  .mtabs{position:relative}
+  .mtabs button{position:relative;z-index:1;transition:color .2s}
+  .mtabs button.on{color:var(--text)}
+  .mt-ind{position:absolute;top:4px;bottom:4px;border-radius:10px;background:var(--card);box-shadow:var(--shadow)}
+  .mt-ind.go{transition:left .3s var(--ease-out),width .3s var(--ease-out)}
   .mtabs .n{font-size:12px;color:var(--t3);font-weight:400}
   .board{display:block;overflow:visible;padding-bottom:8px}
   .board .col{display:none;max-width:none;min-width:0}
@@ -535,6 +542,89 @@ const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u030
 function fmt(ts, short) {
   const d = new Date(ts), t = `${pad(d.getHours())}:${pad(d.getMinutes())}`, day = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
   return short && d.getFullYear() === new Date().getFullYear() ? `${t}, ${day}` : `${t}, ${day}/${d.getFullYear()}`;
+}
+/* ---------- Motion ----------
+   Layout changes use FLIP: measure where things are, change the DOM, then play each element from its old spot
+   to its new one. Short, ease-out, and switched off when the system asks for reduced motion. */
+const RM = matchMedia('(prefers-reduced-motion: reduce)');
+const EASE = 'cubic-bezier(.23,1,.32,1)';
+const motionOff = () => RM.matches || document.hidden;
+function rectsOf(root, sel, key, group) {             // key → { r: rect, g: group }
+  const m = new Map();
+  if (!root || motionOff()) return m;
+  root.querySelectorAll(sel).forEach(el => {
+    const k = key(el); if (k == null) return;
+    const r = el.getBoundingClientRect(); if (r.width || r.height) m.set(k, { r, g: group ? group(el) : null });
+  });
+  return m;
+}
+function playFlip(root, sel, key, before, o = {}) {
+  if (!root || motionOff()) return;
+  root.querySelectorAll(sel).forEach(el => {
+    const k = key(el); if (k == null || (o.skip && o.skip === k)) return;
+    const b = el.getBoundingClientRect(); if (!b.width && !b.height) return;
+    const a = before.get(k);
+    if (!a) { if (o.enter && o.enter(k)) enterAnim(el); return; }
+    if (o.group && a.g !== o.group(el)) { flyGhost(el, a.r, b); return; }
+    const dx = a.r.left - b.left, dy = a.r.top - b.top;
+    if (Math.abs(dx) < .5 && Math.abs(dy) < .5) return;
+    el.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: o.dur || 300, easing: EASE });
+  });
+}
+function enterAnim(el, delay = 0) {
+  if (motionOff()) return;
+  el.animate([{ opacity: 0, transform: 'translateY(4px) scale(.98)' }, { opacity: 1, transform: 'none' }], { duration: 240, delay, easing: EASE, fill: 'backwards' });
+}
+function exitAnim(el, done) {                          // fade the element out where it stands, then run the change
+  if (motionOff()) return done();
+  el.style.pointerEvents = 'none';
+  el.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.97)' }], { duration: 150, easing: EASE, fill: 'forwards' }).onfinish = done;
+}
+/* an element that changes container (a card to another column) flies there as a floating copy */
+function flyGhost(el, from, to) {
+  const g = el.cloneNode(true);
+  g.classList.add('ghost'); g.removeAttribute('data-id'); g.removeAttribute('data-key');
+  g.querySelectorAll('[contenteditable]').forEach(x => x.removeAttribute('contenteditable'));
+  Object.assign(g.style, { position: 'fixed', left: to.left + 'px', top: to.top + 'px', width: to.width + 'px', height: to.height + 'px', margin: '0', zIndex: '70', pointerEvents: 'none' });
+  document.body.append(g); el.style.visibility = 'hidden';
+  const dx = from.left - to.left, dy = from.top - to.top;
+  const a = g.animate([
+    { transform: `translate(${dx}px,${dy}px)` },
+    { transform: `translate(${dx * .35}px,${dy * .35}px) scale(1.03)`, offset: .45 },
+    { transform: 'none' }], { duration: 420, easing: EASE });
+  const end = () => { g.remove(); el.style.visibility = ''; };
+  a.onfinish = end; a.oncancel = end;
+}
+/* change the DOM inside `list` and let the listed elements slide to their new places */
+function flipMove(els, change, dur = 200) {
+  const before = new Map(els.map(x => [x, x.getBoundingClientRect().top]));
+  change();
+  if (motionOff()) return;
+  els.forEach(x => {
+    x.getAnimations().forEach(an => an.cancel());
+    const dy = before.get(x) - x.getBoundingClientRect().top;
+    if (Math.abs(dy) > .5) x.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration: dur, easing: EASE });
+  });
+}
+/* progress bars: re-rendered with the new width, so start them from the old one */
+function tweenWidth(el, from) {
+  if (!el || !from || motionOff()) return;
+  const to = el.style.width; if (to === from) return;
+  el.style.transition = 'none'; el.style.width = from; void el.offsetWidth;
+  el.style.transition = ''; el.style.width = to;
+}
+/* open/close a block by height (folder contents, task history) */
+function heightAnim(el, open, done) {
+  if (motionOff() || !el) { done && done(); return; }
+  const h = el.scrollHeight;
+  el.style.overflow = 'hidden';
+  const a = el.animate(open ? [{ height: '0px', opacity: 0 }, { height: h + 'px', opacity: 1 }] : [{ height: h + 'px', opacity: 1 }, { height: '0px', opacity: 0 }],
+    { duration: open ? 260 : 200, easing: EASE, fill: open ? 'none' : 'forwards' });
+  a.onfinish = () => { el.style.overflow = ''; done && done(); };
+}
+function pageIn() {
+  if (motionOff()) return;
+  $('#page').animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: EASE });
 }
 const sv = d => `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 const IC = {
@@ -709,8 +799,12 @@ function folderRow(f, count, open) {
   it.innerHTML = `<span class="chev">${IC.chevR}</span><span class="nav-ic">${open ? '📂' : '📁'}</span><span class="nav-tt">${esc(f.name || 'Thư mục')}</span><span class="f-cnt">${count}</span><button class="nav-act" data-act="add" title="Thêm trang vào thư mục">${IC.plus}</button><button class="nav-act" data-act="more" title="Tùy chọn thư mục">${IC.dots}</button>`;
   return it;
 }
+let NAV_QUIET = false, NAV_ENTER = null, NAV_SKIP = null;
+const navKey = el => el.dataset.id || (el.dataset.fid ? 'f:' + el.dataset.fid : null);
 function renderNav() {
   const nav = $('#nav'), q = norm($('#q').value.trim());
+  const before = NAV_QUIET || q ? new Map() : rectsOf(nav, '.nav-item', navKey);
+  const enter = NAV_ENTER, skip = NAV_SKIP; NAV_QUIET = false; NAV_ENTER = NAV_SKIP = null;
   nav.innerHTML = '';
   const match = id => !q || norm(pageText(S.pages[id])).includes(q);
   const pagesOf = fid => S.order.filter(id => (S.pages[id].folder || null) === fid);
@@ -731,6 +825,7 @@ function renderNav() {
   pagesOf(null).filter(match).forEach(id => { nav.append(pageRow(id, false)); shown++; });
   if (!shown) nav.append(h('div', 'nav-empty', q ? 'Không tìm thấy trang' : 'Chưa có trang nào'));
   updateTodayNav();
+  if (before.size) playFlip(nav, '.nav-item', navKey, before, { skip, enter: k => k === enter });
 }
 function setCrumb() {
   if (S.active === '__today') { $('#crumb').innerHTML = '<span>☀️</span><span>Highlight today</span>'; return; }
@@ -746,7 +841,9 @@ function updateMeta() {
     const pct = total ? Math.round(done / total * 100) : 0;
     html += `<span class="pg"><span class="prog"><i style="width:${pct}%"></i></span><span>${done}/${total} xong</span></span>`;
   }
+  const w0 = ($('.prog i', m) || {}).style?.width;
   m.innerHTML = html;
+  tweenWidth($('.prog i', m), w0);
 }
 function render() { applyTheme(); renderNav(); renderPage(); }
 
@@ -798,14 +895,14 @@ function createPage(type, folder) {
   p.folder = folder && S.folders[folder] ? folder : null;
   if (p.folder) S.folders[p.folder].open = true;
   $('#q').value = '';
-  S.pages[id] = p; S.order.unshift(id); S.orderAt = t; S.active = id; save(); render();
+  S.pages[id] = p; S.order.unshift(id); S.orderAt = t; S.active = id; save(); NAV_ENTER = id; render(); pageIn();
   if (innerWidth <= 760) setSide(false);
   const tt = $('.ptitle'); tt && tt.focus();
 }
 function openPage(id) {
   const pg = S.pages[id]; if (!pg) return;
   if (pg.folder && S.folders[pg.folder]) S.folders[pg.folder].open = true;
-  S.active = id; save(); renderNav(); renderPage();
+  S.active = id; save(); renderNav(); renderPage(); pageIn();
   if (innerWidth <= 760) setSide(false);
 }
 /* ---------- Folders ---------- */
@@ -1270,7 +1367,7 @@ function bindEditor(ed) {
     }
     if (!DRAGB) return; e.preventDefault();
     const t = $('.drop-before,.drop-after', ed);
-    if (t && t !== DRAGB) t.classList.contains('drop-before') ? t.before(DRAGB) : t.after(DRAGB);
+    if (t && t !== DRAGB) { const d = DRAGB, others = $$('.block', ed).filter(x => x !== d); flipMove(others, () => t.classList.contains('drop-before') ? t.before(d) : t.after(d), 240); }
     endDragB(ed); syncNote();
   });
   ed.addEventListener('dragend', () => endDragB(ed));
@@ -1534,8 +1631,8 @@ function openBlockMenu(w, g) {
     ...MENU.filter(m => m.t !== 'divider' && m.t !== 'image' && m.t !== w.dataset.type).map(m => ({ label: m.label, ic: esc(m.ic), act: 'type', t: m.t }))
   ];
   openMenu(g.getBoundingClientRect(), items, it => {
-    if (it.act === 'del') { w.remove(); if (!ED.children.length) ED.append(newBlock('p')); }
-    else if (it.act === 'dup') w.after(blockEl({ ...ser(w), id: uid() }));
+    if (it.act === 'del') { const ed = ED; exitAnim(w, () => { flipMove($$('.block', ed).filter(x => x !== w), () => w.remove(), 240); if (!ed.children.length) ed.append(newBlock('p')); syncNote(); }); return; }
+    else if (it.act === 'dup') { const n = blockEl({ ...ser(w), id: uid() }); flipMove($$('.block', ED), () => w.after(n), 240); enterAnim(n); }
     else { const nb = setType(w, it.t); focusEnd(bc(nb)); }
     syncNote();
   }, 'block');
@@ -1800,7 +1897,7 @@ function addTask(p, col, afterId, top) {
   if (afterId) p.tasks.splice(p.tasks.findIndex(x => x.id === afterId) + 1, 0, t);
   else if (top) { const i = p.tasks.findIndex(x => x.col === col); i < 0 ? p.tasks.push(t) : p.tasks.splice(i, 0, t); }
   else p.tasks.push(t);
-  drawBoard(p);
+  BOARD_ENTER = t.id; drawBoard(p);
   const tx = BOARD.querySelector(`.card[data-id="${t.id}"] .ttext`); tx && focusEnd(tx);
 }
 function removeLine() { $$('.drop-line', BOARD || document).forEach(x => x.remove()); }
@@ -1833,13 +1930,14 @@ function cardEl(p, t) {
     c.dataset.moving = '1';
     const to = t.col === 'backlog' ? 'todo' : t.col === 'todo' ? 'done' : 'todo';
     chk.classList.toggle('on', t.col !== 'done');
-    setTimeout(() => c.classList.add('leaving'), 120);
+    const mobile = innerWidth <= 760;
+    if (mobile) setTimeout(() => c.classList.add('leaving'), 120);
     setTimeout(() => {
       const first = p.tasks.find(x => x.col === to && x.id !== t.id);
       moveTask(p, t, to, first ? first.id : null); touch(p);
-      if (innerWidth <= 760) { drawBoard(p); toast('Đã chuyển sang ' + colName(to), 'Xem', () => { MCOL = to; drawBoard(p, t.id); }); }
-      else drawBoard(p, t.id);
-    }, 380);
+      if (mobile) { drawBoard(p); toast('Đã chuyển sang ' + colName(to), 'Xem', () => { MCOL = to; drawBoard(p, t.id); }); }
+      else drawBoard(p);
+    }, mobile ? 380 : 200);
   });
   tx.addEventListener('mousedown', () => { c.draggable = false; });
   tx.addEventListener('click', e => { const a = e.target.closest('a[href]'); if (a) { e.preventDefault(); openUrl(a.href); } });
@@ -1857,7 +1955,10 @@ function cardEl(p, t) {
     if (!t.text && p.tasks.includes(t)) { killTask(p, t); c.remove(); touch(p); updateCounts(p); }
     else if (t.text) { touch(p); linkifyEl(tx); }
   });
-  meta.addEventListener('click', () => c.classList.toggle('show-hist'));
+  meta.addEventListener('click', () => {
+    if (c.classList.contains('show-hist')) heightAnim(hist, false, () => { c.classList.remove('show-hist'); hist.getAnimations().forEach(a => a.cancel()); });
+    else { c.classList.add('show-hist'); heightAnim(hist, true); }
+  });
   more.addEventListener('click', e => {
     e.stopPropagation();
     const items = COLS.filter(x => x.id !== t.col).map(x => ({ label: 'Chuyển sang ' + x.name, ic: IC.arrow, to: x.id }));
@@ -1869,7 +1970,10 @@ function cardEl(p, t) {
       toast('Đã chuyển sang ' + colName(it.to), 'Xem', () => { MCOL = it.to; drawBoard(p, t.id); });
     }, 'task');
   });
-  del.addEventListener('click', e => { e.stopPropagation(); killTask(p, t); c.remove(); touch(p); updateCounts(p); });
+  del.addEventListener('click', e => {
+    e.stopPropagation(); killTask(p, t); touch(p);
+    exitAnim(c, () => { const list = c.parentElement, sibs = $$('.card', list).filter(x => x !== c); flipMove(sibs, () => c.remove()); updateCounts(p); });
+  });
   c.addEventListener('click', e => { if (e.target === c) focusEnd(tx); });
   c.addEventListener('dragstart', e => {
     DRAGT = t.id; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', t.text || ' ');
@@ -1890,9 +1994,13 @@ function fitBoard() {
   BOARD.style.setProperty('--colmax', Math.max(340, sc.clientHeight - top - 40) + 'px');
   $$('.cards', BOARD).forEach(fadeOf);
 }
+let BOARD_ENTER = null, BOARD_SKIP = null, MTI = null, MCOL_SHOWN = null;
+const cardKey = el => el.dataset.id, cardCol = el => el.closest('.col').dataset.col;
 function drawBoard(p, flashId) {
   if (!BOARD) return;
   RENDERING = true;
+  const before = rectsOf(BOARD, '.card', cardKey, cardCol);
+  const enter = BOARD_ENTER, skip = BOARD_SKIP; BOARD_ENTER = BOARD_SKIP = null;
   const sx = BOARD.scrollLeft, sy = {};
   $$('.cards', BOARD).forEach(l => { sy[l.parentElement.dataset.col] = l.scrollTop; });
   BOARD.innerHTML = '';
@@ -1925,7 +2033,7 @@ function drawBoard(p, flashId) {
       if (line) { let n = line.nextElementSibling; while (n && (!n.classList.contains('card') || n.dataset.id === DRAGT)) n = n.nextElementSibling; before = n ? n.dataset.id : null; }
       const t = p.tasks.find(x => x.id === DRAGT);
       removeLine(); DRAGT = null;
-      if (t) { moveTask(p, t, col.id, before); touch(p); drawBoard(p, t.id); }
+      if (t) { moveTask(p, t, col.id, before); touch(p); BOARD_SKIP = t.id; drawBoard(p, t.id); }
     });
     BOARD.append(ce);
   });
@@ -1942,10 +2050,26 @@ function drawBoard(p, flashId) {
     const add = h('button', '', IC.plus); add.title = 'Thêm task'; add.style.flex = '0 0 40px';
     add.onclick = () => addTask(p, MCOL, null, true);
     MTABS.append(add);
+    /* the highlight slides between tabs, and the new column eases in from that side */
+    const on = $('button.on', MTABS), ind = h('span', 'mt-ind');
+    MTABS.prepend(ind);
+    if (on && on.offsetWidth) {
+      const to = { l: on.offsetLeft, w: on.offsetWidth };
+      const from = MTI && MCOL_SHOWN && MCOL_SHOWN !== MCOL && !motionOff() ? MTI : to;
+      Object.assign(ind.style, { left: from.l + 'px', width: from.w + 'px' });
+      if (from !== to) { void ind.offsetWidth; ind.classList.add('go'); Object.assign(ind.style, { left: to.l + 'px', width: to.w + 'px' }); }
+      if (from !== to) {
+        const dir = COLS.findIndex(c => c.id === MCOL) > COLS.findIndex(c => c.id === MCOL_SHOWN) ? 1 : -1;
+        const ce = $(`.col[data-col="${MCOL}"]`, BOARD);
+        ce && ce.animate([{ opacity: 0, transform: `translateX(${dir * 18}px)` }, { opacity: 1, transform: 'none' }], { duration: 240, easing: EASE });
+      }
+      MTI = to; MCOL_SHOWN = MCOL;
+    }
   }
   fitBoard();
   RENDERING = false;
   updateMeta();
+  if (before.size) playFlip(BOARD, '.card', cardKey, before, { group: cardCol, skip, enter: k => k === enter });
   if (flashId) {
     const el = BOARD.querySelector(`.card[data-id="${flashId}"]`);
     if (el) { el.classList.add('flash'); el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' }); setTimeout(() => el.classList.remove('flash'), 1500); }
@@ -2818,7 +2942,7 @@ function updateTodayNav() {
   el.classList.toggle('all-done', xs.length > 0 && done === xs.length);
 }
 function openToday() {
-  S.active = TODAY; save(); renderNav(); renderPage();
+  S.active = TODAY; save(); renderNav(); renderPage(); pageIn();
   if (innerWidth <= 760) setSide(false);
 }
 /* boards in the same order as the sidebar */
@@ -2866,11 +2990,23 @@ function saveTodayOrder(list) {
   if (next.map(tkey).join('|') === td.items.map(tkey).join('|')) return false;
   setToday(next); return true;
 }
+/* re-draw Today in place: keep the scroll, slide rows to their new spots, grow the progress bar from where it was */
+function todayRefresh(o = {}) {
+  const page = $('#page'), sc = $('#scroll'), top = sc.scrollTop, rowKey = el => el.dataset.key;
+  const before = rectsOf(page, '.trow', rowKey), hadDone = !!$('.today-done', page);
+  const w0 = ($('.tp-bar .prog i', page) || {}).style?.width;
+  renderPage(); sc.scrollTop = top;
+  playFlip(page, '.trow', rowKey, before, { dur: 360, enter: o.enter });
+  tweenWidth($('.tp-bar .prog i', page), w0);
+  const dn = $('.today-done', page); if (dn && !hadDone) enterAnim(dn, 160);
+  const c = o.pop && $(`.trow[data-key="${o.pop}"] .tchk.on`, page);
+  if (c && !motionOff()) c.animate([{ transform: 'scale(.7)' }, { transform: 'scale(1.12)', offset: .55 }, { transform: 'none' }], { duration: 320, easing: EASE });
+}
 function stepTodayRow(row, dir) {
   const done = row.classList.contains('is-done');
   let sib = dir < 0 ? row.previousElementSibling : row.nextElementSibling;
   if (!sib || !sib.classList.contains('trow') || sib.classList.contains('is-done') !== done) return;
-  dir < 0 ? row.after(sib) : row.before(sib);   // move the neighbour, so the row being edited keeps focus and caret
+  flipMove([row, sib], () => dir < 0 ? row.after(sib) : row.before(sib), 180);   // move the neighbour, so the row being edited keeps focus and caret
   saveTodayOrder(row.parentElement);
   row.scrollIntoView({ block: 'nearest' });
 }
@@ -2879,14 +3015,28 @@ function startTodayDrag(e, row, grip) {
   e.preventDefault(); e.stopPropagation();
   const list = row.parentElement, done = row.classList.contains('is-done');
   TDRAG = { row, list };
+  row.getAnimations().forEach(a => a.cancel());
   row.classList.add('tdragging'); document.body.classList.add('tdrag-on');
   const ae = document.activeElement; if (ae && ae.blur && list.contains(ae)) ae.blur();
+  /* the row follows the pointer; its neighbours slide out of the way as it passes them */
+  const grab = e.clientY - row.getBoundingClientRect().top;
+  const slotTop = () => list.getBoundingClientRect().top + row.offsetTop;      // layout position, ignoring the drag offset
   let scrollT = null, lastY = e.clientY;
+  const follow = () => {                         // stays within its own group (open / done), with a little give at the ends
+    const grp = [...list.children].filter(x => x.classList.contains('trow') && x.classList.contains('is-done') === done);
+    const lt = list.getBoundingClientRect().top, last = grp[grp.length - 1];
+    const lo = lt + grp[0].offsetTop, hi = lt + last.offsetTop + last.offsetHeight - row.offsetHeight;
+    let y = lastY - grab;
+    if (y < lo) y = lo - Math.min((lo - y) * .25, 14); else if (y > hi) y = hi + Math.min((y - hi) * .25, 14);
+    row.style.transform = `translateY(${y - slotTop()}px) scale(1.015)`;
+  };
   const place = y => {
     const sibs = [...list.children].filter(x => x !== row && x.classList.contains('trow') && x.classList.contains('is-done') === done);
-    const nxt = sibs.find(s => { const b = s.getBoundingClientRect(); return y < b.top + b.height / 2; });
-    if (nxt) { if (row.nextElementSibling !== nxt) nxt.before(row); }
-    else if (sibs.length) { const last = sibs[sibs.length - 1]; if (last.nextElementSibling !== row) last.after(row); }
+    const lt = list.getBoundingClientRect().top;
+    const nxt = sibs.find(s => y < lt + s.offsetTop + s.offsetHeight / 2);
+    if (nxt) { if (row.nextElementSibling !== nxt) flipMove(sibs, () => nxt.before(row)); }
+    else if (sibs.length) { const last = sibs[sibs.length - 1]; if (last.nextElementSibling !== row) flipMove(sibs, () => last.after(row)); }
+    follow();
   };
   const autoScroll = () => {                     // keep scrolling while held near the top/bottom edge
     const sc = $('#scroll'), r = sc.getBoundingClientRect();
@@ -2899,8 +3049,11 @@ function startTodayDrag(e, row, grip) {
   const end = () => {
     window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end);
     if (scrollT) cancelAnimationFrame(scrollT);
-    row.classList.remove('tdragging'); document.body.classList.remove('tdrag-on');
+    document.body.classList.remove('tdrag-on');
     TDRAG = null;
+    const cur = row.style.transform; row.style.transform = '';
+    if (cur && !motionOff()) row.animate([{ transform: cur }, { transform: 'none' }], { duration: 240, easing: EASE }).onfinish = () => row.classList.remove('tdragging');
+    else row.classList.remove('tdragging');
     saveTodayOrder(list);
   };
   // listen on window: moving the row in the DOM would drop pointer capture on the handle
@@ -2930,7 +3083,7 @@ function todayRow({ it, p, t }) {
     setTimeout(() => {
       const first = p.tasks.find(x => x.col === to && x.id !== t.id);
       moveTask(p, t, to, first ? first.id : null); touch(p);
-      renderPage(); updateTodayNav();
+      todayRefresh({ pop: to === 'done' ? tkey(it) : null }); updateTodayNav();
       toast(to === 'done' ? `Đã chuyển sang Done trong “${p.title || 'Không có tiêu đề'}”` : `Đã đưa về To-do trong “${p.title || 'Không có tiêu đề'}”`);
     }, 260);
   };
@@ -2957,7 +3110,7 @@ function todayRow({ it, p, t }) {
   });
   rm.onclick = () => {
     const td = todayList(); if (!td) return;
-    setToday(td.items.filter(i => tkey(i) !== tkey(it))); renderPage();
+    exitAnim(r, () => { setToday(td.items.filter(i => tkey(i) !== tkey(it))); todayRefresh(); });
   };
   return r;
 }
@@ -3014,7 +3167,10 @@ function buildPicker(onDone, cta, onCancel) {
 function openPickerModal() {
   const d = dialog('<h3>Thêm việc cho hôm nay</h3>');
   d.classList.add('dlg-picker');
-  d.append(buildPicker(items => { closeOvl(); setToday(items); renderPage(); }, 'Thêm vào hôm nay', closeOvl));
+  d.append(buildPicker(items => {
+    const had = new Set((todayList() || { items: [] }).items.map(tkey));
+    closeOvl(); setToday(items); todayRefresh({ enter: k => !had.has(k) });
+  }, 'Thêm vào hôm nay', closeOvl));
   d.addEventListener('keydown', e => { if (e.key === 'Escape') closeOvl(); });
   setTimeout(() => { const q = $('.pk-q', d); if (q && matchMedia('(pointer:fine)').matches) q.focus(); }, 50);
 }
@@ -3038,7 +3194,7 @@ $('#newBoard').onclick = () => createPage('board');
 $('#newFolder').onclick = () => createFolder();
 $('#todayNav').onclick = () => { if (S.active !== TODAY) openToday(); else if (innerWidth <= 760) setSide(false); };
 setInterval(() => { if (dayKey() !== shownDay) { shownDay = dayKey(); updateTodayNav(); if (S.active === TODAY) renderPage(); } }, 30000);   // midnight → new day
-$('#q').addEventListener('input', renderNav);
+$('#q').addEventListener('input', () => { NAV_QUIET = true; renderNav(); });
 const NAV = $('#nav');
 NAV.addEventListener('click', e => {
   if (e.target.closest('input')) return;
@@ -3059,7 +3215,17 @@ NAV.addEventListener('click', e => {
       ], it => { if (it.a === 'ren') startRename(fid); else if (it.a === 'del') deleteFolder(fid); else if (it.a === 'up' || it.a === 'down') stepFolder(fid, it.a === 'up' ? -1 : 1); else createPage(it.a, fid); }, 'folder');
       return;
     }
-    const f = S.folders[fid]; f.open = !f.open; save(); renderNav(); return;
+    const f = S.folders[fid], box = $(`.f-children[data-fid="${fid}"]`, NAV), chev = $('.chev', fr);
+    if (fr.dataset.anim) return;
+    const spin = open => !motionOff() && chev.animate([{ transform: `rotate(${open ? 0 : 90}deg)` }, { transform: `rotate(${open ? 90 : 0}deg)` }], { duration: 220, easing: EASE });
+    if (f.open && box && !$('#q').value.trim()) {        // close: shrink the contents, then redraw without them
+      fr.dataset.anim = '1'; f.open = false; save(); spin(false);
+      heightAnim(box, false, () => { NAV_QUIET = true; renderNav(); });
+    } else {
+      f.open = !f.open; save(); NAV_QUIET = true; renderNav();
+      if (f.open) { heightAnim($(`.f-children[data-fid="${fid}"]`, NAV), true); spin(true); }
+    }
+    return;
   }
   const del = e.target.closest('.nav-del'), it = e.target.closest('.nav-item[data-id]');
   if (!it) return;
@@ -3129,6 +3295,7 @@ NAV.addEventListener('drop', e => {
   const d = navDropAt(e), pid = DRAGP, fid = DRAGF;
   DRAGP = DRAGF = NAVDROP = null; clearNavDrop();
   if (!d) { renderNav(); return; }
+  NAV_SKIP = pid || ('f:' + fid);                 // the dropped row lands where it was dropped; the others make room
   if (fid) placeFolder(fid, d.fid, d.before);
   else if (d.kind === 'page') placePage(pid, d.fid, d.ref, d.before);
   else if (d.kind === 'into') placePage(pid, d.fid, null);
