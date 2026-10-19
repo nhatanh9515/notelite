@@ -256,6 +256,16 @@ svg{width:16px;height:16px;flex:none;display:block}
 .card.dragging{opacity:.35}
 .card.leaving{opacity:0;transform:translateX(12px) scale(.97)}
 .card.ghost{box-shadow:var(--lift);cursor:default}
+/* tasks picked for today: honey tint, a gold edge and a filled star */
+.card.is-today{background:color-mix(in srgb,var(--p-todo) 30%,var(--card));box-shadow:0 0 0 1.5px color-mix(in srgb,var(--d-todo) 55%,transparent),var(--shadow)}
+.card.is-today:hover{background:color-mix(in srgb,var(--p-todo) 38%,var(--card))}
+.tstar{grid-column:3;grid-row:2;align-self:end;justify-self:end;width:24px;height:24px;margin:0 -2px -2px 0;border-radius:6px;display:grid;place-items:center;color:var(--t3);opacity:0;transition:opacity .15s,color .15s,background-color .15s,transform .16s var(--ease-out)}
+.tstar svg{width:15px;height:15px}
+.card:hover .tstar{opacity:1}
+.tstar:hover{background:var(--hov2);color:var(--d-todo)}
+.tstar:active{transform:scale(.88)}
+.tstar.on{opacity:1;color:var(--d-todo)}
+.card .tmeta{grid-row:2}
 .lightbox{animation:fade-in .2s var(--ease-out)}
 .lightbox img{animation:dlg-in .26s var(--ease-out)}
 .card.flash{animation:flash 1.4s var(--ease-out)}
@@ -347,7 +357,7 @@ svg{width:16px;height:16px;flex:none;display:block}
 .tmore:active{background:var(--hov2)}
 /* Highlight today */
 .today-item{margin:1px 8px 6px;color:var(--text);font-weight:500}
-.today-item .f-cnt{font-weight:500}
+.today-item .f-cnt{font-weight:500;display:inline-block}
 .today-item.all-done .f-cnt{color:var(--ok)}
 .picon.static,.picon.static:hover{background:none;cursor:default}
 /* Today: a forest-green date panel, the plan card tucked over its lower edge, then the checklist as one surface */
@@ -653,6 +663,9 @@ const IC = {
   sync: sv('<path d="M13 6.5A5 5 0 004.2 4.4L3 5.6M3 2.8v2.8h2.8M3 9.5a5 5 0 008.8 2.1l1.2-1.2M13 13.2v-2.8h-2.8"/>'),
   share: sv('<path d="M8 10V2.5M5.2 5.2L8 2.5l2.8 2.7M5 7.5H4a1 1 0 00-1 1v4.5a1 1 0 001 1h8a1 1 0 001-1V8.5a1 1 0 00-1-1h-1"/>'),
   arrow: sv('<path d="M3 8h10M9 4l4 4-4 4"/>'),
+  star: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.6l1.95 4.02 4.43.6-3.23 3.08.8 4.4L8 11.6l-3.95 2.1.8-4.4L1.62 6.22l4.43-.6z"/></svg>',
+  starO: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M8 1.6l1.95 4.02 4.43.6-3.23 3.08.8 4.4L8 11.6l-3.95 2.1.8-4.4L1.62 6.22l4.43-.6z"/></svg>',
+  sun: sv('<circle cx="8" cy="8" r="2.8"/><path d="M8 1.8v1.4M8 12.8v1.4M1.8 8h1.4M12.8 8h1.4M3.6 3.6l1 1M11.4 11.4l1 1M3.6 12.4l1-1M11.4 4.6l1-1"/>'),
   ext: sv('<path d="M9 2.5h4.5V7M13.5 2.5L7.5 8.5M11.5 9.5v4h-9v-9h4"/>'),
   unlink: sv('<path d="M9 4.5l.9-.9a2.5 2.5 0 013.5 3.5l-.9.9M7 11.5l-.9.9a2.5 2.5 0 01-3.5-3.5l.9-.9M2.5 2.5l11 11"/>'),
   globe: sv('<circle cx="8" cy="8" r="5.5"/><path d="M2.5 8h11M8 2.5c1.6 1.7 2.3 3.5 2.3 5.5S9.6 11.8 8 13.5C6.4 11.8 5.7 10 5.7 8S6.4 4.2 8 2.5z"/>'),
@@ -1914,7 +1927,8 @@ function placeLine(list, y) {
   next ? list.insertBefore(line, next) : list.append(line);
 }
 function cardEl(p, t) {
-  const c = h('div', 'card' + (t.col === 'done' ? ' is-done' : '')); c.dataset.id = t.id; c.draggable = true;
+  const today = isInToday(p.id, t.id);
+  const c = h('div', 'card' + (t.col === 'done' ? ' is-done' : '') + (today ? ' is-today' : '')); c.dataset.id = t.id; c.draggable = true;
   const chk = h('button', 'tchk' + (t.col === 'done' ? ' on' : ''), IC.check);
   chk.title = t.col === 'backlog' ? 'Tick → chuyển sang To-do' : t.col === 'todo' ? 'Tick → chuyển sang Done' : 'Bỏ tick → mở lại (về To-do)';
   const tx = h('div', 'ttext'); tx.contentEditable = 'true'; tx.spellcheck = false; tx.dataset.ph = 'Nhập tên task…'; tx.textContent = t.text || ''; linkifyEl(tx);
@@ -1922,7 +1936,15 @@ function cardEl(p, t) {
   const more = h('button', 'tmore', IC.dots); more.title = 'Tùy chọn task';
   const meta = h('div', 'tmeta', metaTask(t)); meta.title = 'Bấm để xem lịch sử chuyển cột';
   const hist = h('div', 'thist', histHtml(t));
-  c.append(chk, tx, del, more, meta, hist);
+  const star = h('button', 'tstar' + (today ? ' on' : ''), today ? IC.star : IC.starO);
+  star.title = today ? 'Đang trong việc cần làm hôm nay · bấm để bỏ ra' : 'Thêm vào việc cần làm hôm nay';
+  star.setAttribute('aria-label', star.title);
+  c.append(chk, tx, del, more, meta, star, hist);
+  star.addEventListener('click', e => {
+    e.stopPropagation();
+    if (!t.text.trim()) { tx.focus(); return; }
+    isInToday(p.id, t.id) ? removeFromToday(p.id, t.id) : addToToday(p, t);
+  });
 
   chk.addEventListener('click', e => {
     e.stopPropagation(); if (c.dataset.moving) return;
@@ -1959,16 +1981,29 @@ function cardEl(p, t) {
     if (c.classList.contains('show-hist')) heightAnim(hist, false, () => { c.classList.remove('show-hist'); hist.getAnimations().forEach(a => a.cancel()); });
     else { c.classList.add('show-hist'); heightAnim(hist, true); }
   });
-  more.addEventListener('click', e => {
-    e.stopPropagation();
-    const items = COLS.filter(x => x.id !== t.col).map(x => ({ label: 'Chuyển sang ' + x.name, ic: IC.arrow, to: x.id }));
+  /* the same task menu opens from right-click (desktop) and from the ⋯ button (phone) */
+  const taskMenu = rect => {
+    const inToday = isInToday(p.id, t.id);
+    const items = [inToday
+      ? { label: 'Bỏ khỏi việc cần làm hôm nay', ic: IC.sun, today: 'remove' }
+      : { label: 'Thêm vào việc cần làm hôm nay', ic: IC.sun, today: 'add', desc: t.col === 'done' ? 'Task đã xong sẽ được mở lại về To-do' : '' }];
+    COLS.filter(x => x.id !== t.col).forEach(x => items.push({ label: 'Chuyển sang ' + x.name, ic: IC.arrow, to: x.id }));
     items.push({ label: 'Xóa task', ic: IC.trash, cls: 'danger', del: true });
-    openMenu(more.getBoundingClientRect(), items, it => {
+    openMenu(rect, items, it => {
+      if (it.today === 'add') { addToToday(p, t); return; }
+      if (it.today === 'remove') { removeFromToday(p.id, t.id); return; }
       if (it.del) { killTask(p, t); touch(p); drawBoard(p); return; }
       const first = p.tasks.find(x => x.col === it.to && x.id !== t.id);
       moveTask(p, t, it.to, first ? first.id : null); touch(p); drawBoard(p);
       toast('Đã chuyển sang ' + colName(it.to), 'Xem', () => { MCOL = it.to; drawBoard(p, t.id); });
     }, 'task');
+  };
+  more.addEventListener('click', e => { e.stopPropagation(); taskMenu(more.getBoundingClientRect()); });
+  c.addEventListener('contextmenu', e => {
+    if (tx.contains(e.target) && document.activeElement === tx) return;   // while typing, keep the browser's own menu (copy, paste, spelling)
+    if (!t.text.trim()) return;
+    e.preventDefault();
+    taskMenu({ left: e.clientX, right: e.clientX, top: e.clientY, bottom: e.clientY });
   });
   del.addEventListener('click', e => {
     e.stopPropagation(); killTask(p, t); touch(p);
@@ -2434,7 +2469,7 @@ function finishSync(ver, etag, doc) {
 }
 /* Put merged data into the app without losing what the user is looking at / typing */
 function applyMerged(m) {
-  const act = S.active, viewSig = () => (S.active === TODAY ? taskSig() : canon(S.pages[S.active] || null)), before = viewSig();
+  const act = S.active, viewSig = () => (S.active === TODAY ? taskSig() : canon([S.pages[S.active] || null, (todayList() || { items: [] }).items.filter(i => i.p === S.active).map(i => i.t)])), before = viewSig();
   const navSig = () => canon([S.order, S.folderOrder, Object.values(S.pages).map(p => [p.id, p.title, p.icon, p.folder]), S.folders]);
   const navBefore = navSig();
   SYNC_KEYS.forEach(k => { S[k] = m[k]; });
@@ -2934,6 +2969,27 @@ function todayItems(td) {                      // tasks that still exist, in the
 }
 function setToday(items) { S.today = { date: dayKey(), items, updatedAt: now() }; save(); updateTodayNav(); }
 let shownDay = dayKey();
+const isInToday = (pid, tid) => { const td = todayList(); return !!td && td.items.some(i => i.p === pid && i.t === tid); };
+function addToToday(p, t) {
+  if (!t.text.trim()) return;
+  if (t.col === 'done') { const first = p.tasks.find(x => x.col === 'todo' && x.id !== t.id); moveTask(p, t, 'todo', first ? first.id : null); touch(p); }
+  const td = todayList();
+  if (!isInToday(p.id, t.id)) setToday([...(td ? td.items : []), { p: p.id, t: t.id }]);
+  if (S.active === p.id && BOARD) {
+    drawBoard(p);
+    const st = BOARD.querySelector(`.card[data-id="${t.id}"] .tstar`);
+    st && !motionOff() && st.animate([{ transform: 'scale(.4) rotate(-40deg)' }, { transform: 'scale(1.25) rotate(8deg)', offset: .6 }, { transform: 'none' }], { duration: 420, easing: EASE });
+  }
+  const cnt = $('#todayNav .f-cnt');
+  if (cnt && !motionOff()) cnt.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.35)', offset: .4 }, { transform: 'scale(1)' }], { duration: 360, easing: EASE });
+  toast('Đã thêm vào việc cần làm hôm nay', 'Xem', openToday);
+}
+function removeFromToday(pid, tid) {
+  const td = todayList(); if (!td) return;
+  setToday(td.items.filter(i => !(i.p === pid && i.t === tid)));
+  const p = S.pages[pid]; if (S.active === pid && BOARD && p) drawBoard(p);
+  toast('Đã bỏ khỏi việc cần làm hôm nay');
+}
 function updateTodayNav() {
   const el = $('#todayNav'); if (!el) return;
   const xs = todayItems(todayList()), done = xs.filter(x => x.t.col === 'done').length;
