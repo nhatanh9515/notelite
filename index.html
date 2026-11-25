@@ -68,6 +68,7 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%;margin:0}
+html{background:var(--bg)}
 body{background:var(--bg);color:var(--text);font-variant-numeric:tabular-nums;font:14px/1.5 ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";-webkit-font-smoothing:antialiased;overflow:hidden}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
 svg{width:16px;height:16px;flex:none;display:block}
@@ -152,12 +153,11 @@ svg{width:16px;height:16px;flex:none;display:block}
 .btn:hover{background:var(--hov)}
 
 /* Editor */
-.editor{counter-reset:num;font-size:16px;line-height:1.5;outline:none}
+.editor{font-size:16px;line-height:1.5;outline:none}
 .block.bsel::before{content:"";position:absolute;inset:-1px -6px;border-radius:6px;background:var(--sel);pointer-events:none;z-index:1}
 .editor.bsel-mode .bc,.editor.bsel-mode{-webkit-user-select:none;user-select:none;caret-color:transparent}
 .block{position:relative;display:flex;align-items:flex-start;margin:1px 0}
-.block:not([data-type=number]){counter-reset:num}
-.block[data-type=number]{counter-increment:num}
+.block[data-indent]{margin-left:calc(var(--ind) * 26px)}
 .grip{position:absolute;left:-26px;top:3px;width:20px;height:24px;border-radius:4px;display:grid;place-items:center;color:var(--t3);opacity:0;cursor:grab;transition:opacity .1s}
 .grip svg{width:10px;height:16px}
 .block:hover>.grip{opacity:1}
@@ -171,7 +171,9 @@ svg{width:16px;height:16px;flex:none;display:block}
 .editor>.block:first-child{margin-top:0}
 .pre{min-width:24px;height:30px;display:flex;align-items:center;justify-content:center;flex:none;padding:0 2px}
 .block[data-type=bullet] .pre::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
-.block[data-type=number] .pre::before{content:counter(num) "."}
+.block[data-type=number] .pre::before{content:attr(data-n)}
+.block[data-type=bullet][data-indent="1"] .pre::before,.block[data-type=bullet][data-indent="4"] .pre::before{background:none;box-shadow:inset 0 0 0 1.5px currentColor}
+.block[data-type=bullet][data-indent="2"] .pre::before,.block[data-type=bullet][data-indent="5"] .pre::before{border-radius:1px;width:5px;height:5px}
 .chk{width:17px;height:17px;margin:6px 8px 0 4px;border:1.5px solid var(--t3);border-radius:5px;cursor:pointer;flex:none;display:grid;place-items:center;transition:background-color .15s,border-color .15s}
 .chk svg{width:12px;height:12px;color:var(--acc-ink);opacity:0}
 .chk.on{background:var(--acc);border-color:var(--acc)}.chk.on svg{opacity:1}
@@ -467,6 +469,9 @@ body.tdrag-on,body.tdrag-on *{cursor:grabbing!important;-webkit-user-select:none
   #scroll{padding-bottom:env(safe-area-inset-bottom)}
   .sfoot{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
   #side{padding-top:env(safe-area-inset-top)}
+  #main{padding-top:env(safe-area-inset-top)}
+  #app{height:var(--vvh,100%)}
+  #scroll{overscroll-behavior:contain}
   #q,.rename,.lp-edit input{font-size:16px}
   .ttext,.editor{font-size:16px}
   .sitem,.nav-item{height:36px}
@@ -665,6 +670,8 @@ const IC = {
   arrow: sv('<path d="M3 8h10M9 4l4 4-4 4"/>'),
   star: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.6l1.95 4.02 4.43.6-3.23 3.08.8 4.4L8 11.6l-3.95 2.1.8-4.4L1.62 6.22l4.43-.6z"/></svg>',
   starO: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M8 1.6l1.95 4.02 4.43.6-3.23 3.08.8 4.4L8 11.6l-3.95 2.1.8-4.4L1.62 6.22l4.43-.6z"/></svg>',
+  indent: sv('<path d="M3 3.5h10M7 6.5h6M7 9.5h6M3 12.5h10M3 6l2.2 2L3 10"/>'),
+  outdent: sv('<path d="M3 3.5h10M7 6.5h6M7 9.5h6M3 12.5h10M5.2 6L3 8l2.2 2"/>'),
   sun: sv('<circle cx="8" cy="8" r="2.8"/><path d="M8 1.8v1.4M8 12.8v1.4M1.8 8h1.4M12.8 8h1.4M3.6 3.6l1 1M11.4 11.4l1 1M3.6 12.4l1-1M11.4 4.6l1-1"/>'),
   ext: sv('<path d="M9 2.5h4.5V7M13.5 2.5L7.5 8.5M11.5 9.5v4h-9v-9h4"/>'),
   unlink: sv('<path d="M9 4.5l.9-.9a2.5 2.5 0 013.5 3.5l-.9.9M7 11.5l-.9.9a2.5 2.5 0 01-3.5-3.5l.9-.9M2.5 2.5l11 11"/>'),
@@ -1033,8 +1040,22 @@ function duplicatePage(id) {
 
 /* ---------- Caret utilities ---------- */
 function setSel(r) { const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
-function focusStart(el) { el.focus(); const r = document.createRange(); r.selectNodeContents(el); r.collapse(true); setSel(r); }
-function focusEnd(el) { el.focus(); const r = document.createRange(); r.selectNodeContents(el); r.collapse(false); setSel(r); }
+/* focus without the browser's own jump-scroll, then nudge the list just enough to show the caret */
+function focusAt(el, start) {
+  const inNote = !!(el.closest && el.closest('.editor'));
+  el.focus(inNote ? { preventScroll: true } : undefined);
+  const r = document.createRange(); r.selectNodeContents(el); r.collapse(start); setSel(r);
+  if (inNote) keepCaretInView(el);
+}
+const focusStart = el => focusAt(el, true), focusEnd = el => focusAt(el, false);
+function keepCaretInView(el) {
+  const sc = $('#scroll'); if (!sc || !el || !sc.contains(el)) return;
+  const box = sc.getBoundingClientRect(), vv = window.visualViewport;
+  const bottom = Math.min(box.bottom, vv ? vv.offsetTop + vv.height : innerHeight) - 28, top = box.top + 16;
+  let r = caretRect(el); if (!r || (!r.height && !r.top)) r = el.getBoundingClientRect();
+  if (r.bottom > bottom) sc.scrollTop += r.bottom - bottom;
+  else if (r.top < top) sc.scrollTop -= top - r.top;
+}
 function caretOffset(el) {
   const s = getSelection(); if (!s.rangeCount) return 0;
   const r = s.getRangeAt(0); if (!el.contains(r.startContainer)) return 0;
@@ -1076,6 +1097,29 @@ function onEdge(el, dir) {
 const tidy = el => { if (!el.textContent) el.innerHTML = ''; };
 function lineBreak() { if (!document.execCommand('insertLineBreak')) document.execCommand('insertHTML', false, '<br>'); }
 
+/* ---------- Phones: the keyboard ----------
+   iOS slides the whole page up when the keyboard opens, which pushed the top bar under the status bar and
+   made new lines jump. Instead the app is sized to the visible area above the keyboard and the page itself
+   never scrolls; only the note scrolls, by as little as needed to keep the caret in sight. */
+(() => {
+  const vv = window.visualViewport;
+  if (!vv || !matchMedia('(pointer: coarse)').matches) return;
+  const root = document.documentElement;
+  let raf = 0;
+  const fit = () => {
+    raf = 0;
+    root.style.setProperty('--vvh', Math.round(vv.height) + 'px');
+    if (window.scrollY || root.scrollTop || document.body.scrollTop) { window.scrollTo(0, 0); document.body.scrollTop = 0; }
+    const a = document.activeElement;
+    if (a && a.isContentEditable) keepCaretInView(a);
+  };
+  const queue = () => { if (!raf) raf = requestAnimationFrame(fit); };
+  vv.addEventListener('resize', queue); vv.addEventListener('scroll', queue); addEventListener('scroll', queue);
+  document.addEventListener('focusin', () => setTimeout(queue, 60));
+  document.addEventListener('input', e => { if (e.target.isContentEditable) queue(); });
+  fit();
+})();
+
 /* ---------- Note editor ---------- */
 const PH = { p: "Gõ '/' để chọn lệnh…", h1: 'Tiêu đề 1', h2: 'Tiêu đề 2', h3: 'Tiêu đề 3', bullet: 'Danh sách', number: 'Danh sách', todo: 'Việc cần làm', quote: 'Trích dẫn', code: 'Code (Ctrl/⌘+Enter để thoát khối)' };
 const MENU = [
@@ -1094,6 +1138,7 @@ const MENU = [
 const bc = w => w.querySelector('.bc');
 function blockEl(b) {
   const w = h('div', 'block'); w.dataset.id = b.id || uid(); w.dataset.type = b.type || 'p';
+  setIndent(w, b.indent);
   const g = h('div', 'grip', IC.grip); g.draggable = true; g.title = 'Kéo để di chuyển · Bấm để mở menu';
   w.append(g);
   if (b.type === 'divider') { w.append(h('div', 'hr')); return w; }
@@ -1106,15 +1151,50 @@ function blockEl(b) {
   w.append(c);
   return w;
 }
-const newBlock = type => blockEl({ id: uid(), type, html: '', checked: false });
+const newBlock = (type, indent = 0) => blockEl({ id: uid(), type, html: '', checked: false, indent });
+/* nesting: a block can sit up to MAX_IND levels deep (Tab / Shift+Tab) */
+const MAX_IND = 6, INDENTABLE = ['p', 'bullet', 'number', 'todo'];
+const indOf = w => +(w && w.dataset.indent) || 0;
+function setIndent(w, n) {
+  n = Math.max(0, Math.min(MAX_IND, +n || 0));
+  if (n) { w.dataset.indent = n; w.style.setProperty('--ind', n); } else { delete w.dataset.indent; w.style.removeProperty('--ind'); }
+}
+/* list markers depend on depth: numbers restart per level (1. → a. → i.), bullets change shape */
+const ROMAN = n => { const t = [[10, 'x'], [9, 'ix'], [5, 'v'], [4, 'iv'], [1, 'i']]; let o = ''; for (const [v, r] of t) while (n >= v) { o += r; n -= v; } return o; };
+const ALPHA = n => { let o = ''; while (n > 0) { n--; o = String.fromCharCode(97 + n % 26) + o; n = Math.floor(n / 26); } return o; };
+const numLabel = (n, lvl) => (lvl % 3 === 1 ? ALPHA(n) : lvl % 3 === 2 ? ROMAN(n) : n) + '.';
+function renumber(ed) {
+  if (!ed) return;
+  const cnt = [];
+  for (const w of ed.children) {
+    if (!w.classList.contains('block')) continue;
+    const L = indOf(w);
+    if (w.dataset.type === 'number') {
+      cnt.length = L + 1; cnt[L] = (cnt[L] || 0) + 1;
+      const pre = $('.pre', w); if (pre) pre.dataset.n = numLabel(cnt[L], L);
+    } else cnt.length = Math.min(cnt.length, L);
+  }
+}
+function indentBlocks(list, dir) {
+  let changed = false;
+  list.forEach(w => {
+    if (!INDENTABLE.includes(w.dataset.type)) return;
+    const prev = w.previousElementSibling, cap = dir > 0 ? Math.min(MAX_IND, prev && prev.classList.contains('block') ? indOf(prev) + 1 : 0) : MAX_IND;
+    const n = Math.max(0, Math.min(cap, indOf(w) + dir));
+    if (n !== indOf(w)) { setIndent(w, n); changed = true; }
+  });
+  if (changed) { renumber(ED); syncNote(); }
+  return changed;
+}
 function setType(w, type, checked = false) {
   const c = bc(w);
-  const nb = blockEl({ id: w.dataset.id, type, html: type === 'divider' || !c ? '' : c.innerHTML, checked });
+  const nb = blockEl({ id: w.dataset.id, type, html: type === 'divider' || !c ? '' : c.innerHTML, checked, indent: INDENTABLE.includes(type) ? indOf(w) : 0 });
   w.replaceWith(nb); return nb;
 }
-const ser = w => { const t = w.dataset.type, o = { id: w.dataset.id, type: t, html: bc(w) ? bc(w).innerHTML : '', checked: w.classList.contains('checked') }; if (t === 'image') { o.img = w.dataset.img || ''; if (+w.dataset.width) o.width = +w.dataset.width; } return o; };
+const ser = w => { const t = w.dataset.type, o = { id: w.dataset.id, type: t, html: bc(w) ? bc(w).innerHTML : '', checked: w.classList.contains('checked') }; if (indOf(w)) o.indent = indOf(w); if (t === 'image') { o.img = w.dataset.img || ''; if (+w.dataset.width) o.width = +w.dataset.width; } return o; };
 function syncNote() {
   const p = cur(); if (!p || p.type !== 'note' || !ED) return;
+  renumber(ED);
   p.blocks = $$(':scope > .block', ED).map(ser); touch(p);
 }
 function onImgKey(e) {
@@ -1142,6 +1222,7 @@ function renderNote(p, host) {
   ED = h('div', 'editor');
   const blocks = p.blocks && p.blocks.length ? p.blocks : [{ id: uid(), type: 'p', html: '' }];
   blocks.forEach(b => ED.append(blockEl(b)));
+  renumber(ED);
   const tail = h('div', 'ed-tail');
   tail.addEventListener('mousedown', e => {
     e.preventDefault();
@@ -1178,21 +1259,30 @@ function onKey(e) {
     if (type === 'todo') { w.classList.toggle('checked'); $('.chk', w).classList.toggle('on'); syncNote(); return; }
     const nb = newBlock('p'); w.after(nb); focusStart(bc(nb)); syncNote(); return;
   }
+  if (e.key === 'Tab' && type !== 'code') {             // Tab nests the line one level deeper, Shift+Tab brings it back
+    e.preventDefault();
+    if (INDENTABLE.includes(type)) indentBlocks([w], e.shiftKey ? -1 : 1);
+    return;
+  }
   if (e.key === 'Enter') {
     e.preventDefault();
     if (type !== 'code') linkifyAtCaret(c, true);
     if (e.shiftKey || type === 'code') { lineBreak(); return; }
-    if (!c.textContent && LISTY.includes(type)) { focusStart(bc(setType(w, 'p'))); syncNote(); return; }
+    if (!c.textContent && LISTY.includes(type)) {          // empty list line: step out one level first, then leave the list
+      if (indOf(w)) { indentBlocks([w], -1); return; }
+      focusStart(bc(setType(w, 'p'))); syncNote(); return;
+    }
     const sel = getSelection(); if (!sel.rangeCount) return;
     const r = sel.getRangeAt(0); if (!r.collapsed) r.deleteContents();
-    const nt = ['bullet', 'number', 'todo'].includes(type) ? type : 'p';
-    if (c.textContent && caretOffset(c) === 0) { w.before(newBlock(nt)); syncNote(); return; }
+    const nt = ['bullet', 'number', 'todo'].includes(type) ? type : 'p', ni = INDENTABLE.includes(type) ? indOf(w) : 0;
+    if (c.textContent && caretOffset(c) === 0) { w.before(newBlock(nt, ni)); syncNote(); return; }
     const tail = document.createRange(); tail.selectNodeContents(c); tail.setStart(r.startContainer, r.startOffset);
     const frag = tail.extractContents();
-    const nb = newBlock(nt); w.after(nb); const nc = bc(nb); nc.append(frag);
+    const nb = newBlock(nt, ni); w.after(nb); const nc = bc(nb); nc.append(frag);
     tidy(c); tidy(nc); focusStart(nc); syncNote(); return;
   }
   if (e.key === 'Backspace' && atStart(c)) {
+    if (indOf(w) && LISTY.includes(type)) { e.preventDefault(); indentBlocks([w], -1); return; }   // at the start of a nested item: step out first
     if (type !== 'p') { e.preventDefault(); focusStart(bc(setType(w, 'p'))); syncNote(); return; }
     const prev = w.previousElementSibling; if (!prev) return;
     e.preventDefault();
@@ -1421,13 +1511,13 @@ function clipOf(list, imgSrc) {
   const close = () => { if (open) { html.push(open === 'todo' ? '</ul>' : `</${open}>`); open = null; } };
   const listOpen = tag => { if (open === tag) return; close(); open = tag; html.push(tag === 'todo' ? '<ul style="list-style:none;padding-left:0">' : `<${tag}>`); };
   list.forEach(b => {
-    const t = htmlText(b.html), inner = b.html || '';
+    const t = htmlText(b.html), inner = b.html || '', lv = +b.indent || 0, sp = '    '.repeat(lv), ml = lv ? ` style="margin-left:${lv * 24}px"` : '';
     n = b.type === 'number' ? n + 1 : 0;
     switch (b.type) {
       case 'h1': case 'h2': case 'h3': close(); plain.push(t); html.push(`<${b.type}>${inner}</${b.type}>`); break;
-      case 'bullet': listOpen('ul'); plain.push('- ' + t); html.push(`<li>${inner}</li>`); break;
-      case 'number': listOpen('ol'); plain.push(n + '. ' + t); html.push(`<li>${inner}</li>`); break;
-      case 'todo': listOpen('todo'); plain.push((b.checked ? '☑ ' : '☐ ') + t); html.push(`<li>${b.checked ? '☑' : '☐'} ${b.checked ? `<s>${inner}</s>` : inner}</li>`); break;
+      case 'bullet': listOpen('ul'); plain.push(sp + '- ' + t); html.push(`<li${ml}>${inner}</li>`); break;
+      case 'number': listOpen('ol'); plain.push(sp + n + '. ' + t); html.push(`<li${ml}>${inner}</li>`); break;
+      case 'todo': listOpen('todo'); plain.push(sp + (b.checked ? '☑ ' : '☐ ') + t); html.push(`<li${ml}>${b.checked ? '☑' : '☐'} ${b.checked ? `<s>${inner}</s>` : inner}</li>`); break;
       case 'quote': close(); plain.push('> ' + t); html.push(`<blockquote>${inner}</blockquote>`); break;
       case 'code': close(); plain.push(t); html.push(`<pre><code>${esc(t)}</code></pre>`); break;
       case 'divider': close(); plain.push('---'); html.push('<hr>'); break;
@@ -1437,11 +1527,11 @@ function clipOf(list, imgSrc) {
         if (src) html.push(`<p><img src="${src}" width="${wpx}" style="max-width:100%"></p>`);
         break;
       }
-      default: close(); plain.push(t); html.push(`<p>${inner || '<br>'}</p>`);
+      default: close(); plain.push(sp + t); html.push(`<p${ml}>${inner || '<br>'}</p>`);
     }
   });
   close();
-  const mark = encMark({ notelite: 1, blocks: list.map(b => ({ type: b.type, html: b.html, checked: !!b.checked, img: b.img, width: b.width })) });
+  const mark = encMark({ notelite: 1, blocks: list.map(b => ({ type: b.type, html: b.html, checked: !!b.checked, img: b.img, width: b.width, indent: b.indent || 0 })) });
   return { plain: plain.join('\n'), html: `<meta charset="utf-8"><div data-notelite="${mark}">${html.join('')}</div>` };
 }
 const blobToDataUrl = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
@@ -1567,6 +1657,7 @@ function onSelKey(e) {
     if (k.toLowerCase() === 'x') { deleteSelectedBlocks(); toast('Đã cắt'); }
   } else if (mod && (k === 'a' || k === 'A')) { e.preventDefault(); selectAllBlocks(); }
   else if (k === 'Escape') { e.preventDefault(); clearBlockSel(); }
+  else if (k === 'Tab') { e.preventDefault(); indentBlocks(SELB.slice(), e.shiftKey ? -1 : 1); }
   else if (k === 'Backspace' || k === 'Delete') { e.preventDefault(); deleteSelectedBlocks(); }
   else if (e.shiftKey && (k === 'ArrowUp' || k === 'ArrowDown')) {
     e.preventDefault();
@@ -1640,12 +1731,16 @@ function openBlockMenu(w, g) {
   const items = [
     { label: 'Xóa', ic: IC.trash, act: 'del', cls: 'danger' },
     { label: 'Nhân bản', ic: IC.copy, act: 'dup' },
+    ...(INDENTABLE.includes(w.dataset.type) ? [
+      { label: 'Thụt vào một cấp', ic: IC.indent, act: 'ind', desc: 'Tab' },
+      ...(indOf(w) ? [{ label: 'Lùi ra một cấp', ic: IC.outdent, act: 'out', desc: 'Shift + Tab' }] : [])] : []),
     { head: 'Chuyển thành' },
     ...MENU.filter(m => m.t !== 'divider' && m.t !== 'image' && m.t !== w.dataset.type).map(m => ({ label: m.label, ic: esc(m.ic), act: 'type', t: m.t }))
   ];
   openMenu(g.getBoundingClientRect(), items, it => {
     if (it.act === 'del') { const ed = ED; exitAnim(w, () => { flipMove($$('.block', ed).filter(x => x !== w), () => w.remove(), 240); if (!ed.children.length) ed.append(newBlock('p')); syncNote(); }); return; }
     else if (it.act === 'dup') { const n = blockEl({ ...ser(w), id: uid() }); flipMove($$('.block', ED), () => w.after(n), 240); enterAnim(n); }
+    else if (it.act === 'ind' || it.act === 'out') { indentBlocks([w], it.act === 'ind' ? 1 : -1); return; }
     else { const nb = setType(w, it.t); focusEnd(bc(nb)); }
     syncNote();
   }, 'block');
